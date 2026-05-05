@@ -183,6 +183,48 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
 .hist-entry-role{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
 .hist-empty{font-size:11px;color:#bbb;font-family:'DM Mono',monospace;font-style:italic}
 
+/* MOBILE TOUCH SELECT */
+.card.touch-selected{box-shadow:0 0 0 2px var(--gold),0 4px 16px rgba(200,169,110,.35)!important;transform:scale(1.03);z-index:10;opacity:1!important}
+.move-bar{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--hdr);border-top:2px solid var(--gold);padding:.65rem 1rem;z-index:400;align-items:center;gap:8px;flex-wrap:wrap}
+.move-bar.open{display:flex}
+.move-bar-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);flex:1;min-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.move-bar-orgs{display:flex;gap:6px;flex-wrap:wrap;width:100%}
+.move-bar-org{background:#2a2520;border:1px solid #4a4030;border-radius:4px;color:var(--hdr-text);font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;cursor:pointer;white-space:nowrap;transition:all .15s}
+.move-bar-org:hover,.move-bar-org.active{background:var(--gold);color:var(--hdr);border-color:var(--gold)}
+.move-bar-cancel{background:transparent;border:1px solid #6a6050;border-radius:4px;color:#6a6050;font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;cursor:pointer;flex-shrink:0}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  :root{--col-w:138px}
+  nav{padding:0 .6rem;flex-wrap:nowrap}
+  .ward-title{font-size:11px;margin-right:.6rem;flex-shrink:0}
+  .nav-tabs{flex-shrink:0;overflow-x:auto}
+  .nav-tab{font-size:10px;padding:0 8px}
+  .nav-right{gap:3px}
+  .btn.sm{font-size:10px;padding:3px 6px}
+  .sync-indicator{font-size:10px;padding:3px 5px}
+  .toolbar{padding:.5rem .75rem;gap:5px}
+  .search-box{width:120px;font-size:11px}
+  .filter-pill{font-size:10px;padding:2px 7px}
+  .legend{display:none}
+  .board-wrap{padding:.75rem .75rem 6rem}
+  .col-header{font-size:9px;padding:4px 5px}
+  .card{font-size:10px;padding:3px 6px 4px}
+  .card-name{font-size:10px}
+  .card-role{font-size:9px}
+  .dashboard{padding:.75rem}
+  .dash-grid{grid-template-columns:1fr}
+  .stats-top{grid-template-columns:1fr 1fr}
+  .orgs-table-header,.orgs-table-row{grid-template-columns:1fr 44px 44px 60px;padding:.4rem .75rem;font-size:11px}
+}
+@media (max-width: 480px) {
+  :root{--col-w:118px}
+  .nav-tab{font-size:9px;padding:0 5px;letter-spacing:0}
+  .ward-title{display:none}
+  .dash-add-row{flex-direction:column}
+  .dash-add-row input,.dash-add-row .member-search-wrap{width:100%;flex:none}
+}
+
 /* PRINT */
 @media print{
   nav,.toolbar,.stats-bar,.add-card-btn,.add-col-btn,.ctx-menu,.toast,.modal-bg,
@@ -270,6 +312,15 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 </head>
 <body>
+
+<!-- MOBILE MOVE BAR -->
+<div class="move-bar" id="moveBar">
+  <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:8px">
+    <span class="move-bar-label" id="moveBarLabel">Move: ...</span>
+    <button class="move-bar-cancel" onclick="cancelTouchMove()">✕ Cancel</button>
+  </div>
+  <div class="move-bar-orgs" id="moveBarOrgs"></div>
+</div>
 
 <!-- LOGIN SCREEN -->
 <div class="login-screen" id="loginScreen">
@@ -1442,6 +1493,64 @@ function jumpToLongServing() {
   setFilter('longserving', document.querySelectorAll('.filter-pill')[4]);
 }
 
+// ── TOUCH MOVE SYSTEM ─────────────────────────────────────────────
+let touchSelectedCard = null;
+const isTouchDevice = () => window.matchMedia('(pointer: coarse)').matches;
+
+function selectCardForMove(cardEl) {
+  // Deselect previous
+  if (touchSelectedCard) touchSelectedCard.classList.remove('touch-selected');
+  if (touchSelectedCard === cardEl) { touchSelectedCard = null; closeMoveBar(); return; }
+  touchSelectedCard = cardEl;
+  cardEl.classList.add('touch-selected');
+  openMoveBar(cardEl);
+}
+
+function openMoveBar(cardEl) {
+  const bar = document.getElementById('moveBar');
+  const label = document.getElementById('moveBarLabel');
+  const orgsEl = document.getElementById('moveBarOrgs');
+  const name = cardEl.querySelector('.card-name').textContent;
+  const role = cardEl.querySelector('.card-role').textContent;
+  label.textContent = 'Moving: ' + name + (role ? ' — ' + role : '');
+  // Build org buttons
+  orgsEl.innerHTML = '';
+  boardData.forEach((col, ci) => {
+    const btn = document.createElement('button');
+    btn.className = 'move-bar-org';
+    btn.textContent = col.col;
+    // Highlight current org
+    const currentCol = cardEl.closest('.column');
+    if (currentCol && parseInt(currentCol.dataset.col) === ci) {
+      btn.style.opacity = '.5';
+      btn.style.cursor = 'default';
+    }
+    btn.addEventListener('click', () => moveCardToOrg(ci));
+    orgsEl.appendChild(btn);
+  });
+  bar.classList.add('open');
+}
+
+function moveCardToOrg(colIdx) {
+  if (!touchSelectedCard) return;
+  const colEl = document.querySelectorAll('.column')[colIdx];
+  if (!colEl) return;
+  const cardsEl = colEl.querySelector('.col-cards');
+  const addBtn = cardsEl.querySelector('.add-card-btn');
+  const firstVacant = cardsEl.querySelector('.card[data-vacant="1"]');
+  cardsEl.insertBefore(touchSelectedCard, firstVacant || addBtn);
+  sinkVacants(cardsEl);
+  cancelTouchMove();
+  syncDataFromDOM(); updateStats(); saveToStorage();
+  showToast('Moved to ' + boardData[colIdx].col);
+}
+
+function cancelTouchMove() {
+  if (touchSelectedCard) touchSelectedCard.classList.remove('touch-selected');
+  touchSelectedCard = null;
+  document.getElementById('moveBar').classList.remove('open');
+}
+
 // ── BOARD RENDER ──────────────────────────────────────────────────
 function sinkVacants(cardsEl) {
   const addBtn = cardsEl.querySelector('.add-card-btn');
@@ -1489,6 +1598,17 @@ function makeCardEl(cardData) {
       document.querySelectorAll('.col-cards').forEach(sinkVacants);
       syncDataFromDOM(); updateStats(); saveToStorage();
     });
+    // Touch: tap to select, then pick org from move bar
+    div.addEventListener('touchend', e => {
+      // Only intercept if not a scroll
+      if (Math.abs(div._touchStartY - e.changedTouches[0].clientY) < 8) {
+        e.preventDefault();
+        selectCardForMove(div);
+      }
+    }, {passive: false});
+    div.addEventListener('touchstart', e => {
+      div._touchStartY = e.touches[0].clientY;
+    }, {passive: true});
   }
   div.addEventListener('contextmenu', e => {
     e.preventDefault();
@@ -2226,6 +2346,8 @@ document.addEventListener('click', e => {
   if (!e.target.closest('#ctxMenu')) document.getElementById('ctxMenu').classList.remove('open');
   if (e.target.classList.contains('modal-bg')) e.target.classList.remove('open');
   if (!e.target.closest('.member-search-wrap')) document.querySelectorAll('.member-dropdown').forEach(d => d.classList.remove('open'));
+  // Dismiss move bar if tapping outside a card or the move bar itself
+  if (touchSelectedCard && !e.target.closest('.card') && !e.target.closest('#moveBar')) cancelTouchMove();
 });
 DASH_SECTIONS.forEach(sec => {
   const el = document.getElementById('role-' + sec);
