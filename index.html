@@ -27,6 +27,20 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min
 .sync-indicator.synced{color:#4caf7d;border-color:#2d7a52}
 .sync-indicator.saving{color:var(--gold);border-color:#6a5030}
 .sync-indicator.error{color:#e07070;border-color:#7a3030}
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--hdr);display:flex;align-items:center;justify-content:center;z-index:9999;flex-direction:column;gap:0}
+.login-screen.hidden{display:none}
+.login-box{background:#2a2520;border:1px solid #3a3028;border-radius:12px;padding:2.5rem 2rem;width:340px;max-width:90vw;display:flex;flex-direction:column;align-items:center;gap:1.25rem}
+.login-logo{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--hdr-text);letter-spacing:.08em;text-align:center}
+.login-logo span{color:var(--gold)}
+.login-sub{font-family:'DM Mono',monospace;font-size:11px;color:#6a6050;text-align:center;letter-spacing:.05em;text-transform:uppercase;margin-top:-8px}
+.login-input{width:100%;padding:10px 14px;background:#1a1510;border:1px solid #4a4030;border-radius:6px;color:var(--hdr-text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;text-align:center;letter-spacing:.1em;transition:border-color .2s}
+.login-input:focus{border-color:var(--gold)}
+.login-input::placeholder{color:#4a4030;letter-spacing:.05em}
+.login-btn{width:100%;padding:10px;background:var(--gold);border:none;border-radius:6px;color:var(--hdr);font-family:'DM Mono',monospace;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;letter-spacing:.05em}
+.login-btn:hover{background:#d4b87e}
+.login-error{font-family:'DM Mono',monospace;font-size:11px;color:#e07070;text-align:center;min-height:16px;transition:opacity .2s}
+.login-hint{font-family:'DM Mono',monospace;font-size:10px;color:#3a3028;text-align:center}
 /* NAV */
 nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;position:sticky;top:0;z-index:100;border-bottom:2px solid #3a3028;padding:0 1.5rem}
 .ward-title{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--hdr-text);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;margin-right:1.5rem}
@@ -243,6 +257,18 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Ward <span>Board</span></div>
+    <div class="login-sub">Orem 40th YSA Ward</div>
+    <input class="login-input" type="password" id="loginPassword" placeholder="Enter password" onkeydown="if(event.key==='Enter')attemptLogin()">
+    <div class="login-error" id="loginError"></div>
+    <button class="login-btn" onclick="attemptLogin()">Sign In</button>
+    <div class="login-hint">Contact your ward clerk for access</div>
+  </div>
+</div>
+
 <nav>
   <div class="ward-title">Ward <span>Board</span></div>
   <div class="nav-tabs">
@@ -255,6 +281,7 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
     <div id="syncIndicator" class="sync-indicator" title="Sync status">⬤ connecting...</div>
     <button class="btn sm" onclick="window.print()" title="Print org chart">Print</button>
     <button class="btn sm" onclick="exportCSV()">CSV</button>
+    <button class="btn sm" onclick="logout()" title="Sign out">Sign Out</button>
     <button class="btn sm accent" onclick="openAddCol()">+ Org</button>
   </div>
 </nav>
@@ -1887,11 +1914,60 @@ DASH_SECTIONS.forEach(sec => {
   if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') addDashItem(sec); });
 });
 
+// ── AUTH ──────────────────────────────────────────────────────────
+// To change the password, update the value below
+const WARD_PASSWORD = 'Moroni40';
+const SESSION_KEY = 'wardBoardAuth';
+const SESSION_DAYS = 7;
+
+function checkAuth() {
+  const stored = localStorage.getItem(SESSION_KEY);
+  if (!stored) return false;
+  try {
+    const {token, expires} = JSON.parse(stored);
+    if (token === btoa(WARD_PASSWORD) && Date.now() < expires) return true;
+  } catch(e) {}
+  return false;
+}
+
+function attemptLogin() {
+  const input = document.getElementById('loginPassword');
+  const errorEl = document.getElementById('loginError');
+  const val = input.value;
+  if (val === WARD_PASSWORD) {
+    const expires = Date.now() + SESSION_DAYS * 86400000;
+    localStorage.setItem(SESSION_KEY, JSON.stringify({token: btoa(WARD_PASSWORD), expires}));
+    document.getElementById('loginScreen').classList.add('hidden');
+    errorEl.textContent = '';
+    initApp();
+  } else {
+    errorEl.textContent = 'Incorrect password — try again';
+    input.value = '';
+    input.focus();
+    // Shake animation
+    input.style.borderColor = '#e07070';
+    setTimeout(() => input.style.borderColor = '', 1000);
+  }
+}
+
+function logout() {
+  localStorage.removeItem(SESSION_KEY);
+  location.reload();
+}
+
 // ── INIT ──────────────────────────────────────────────────────────
-loadData();
-renderBoard();
-renderDash();
-renderHistory();
+function initApp() {
+  loadData();
+  renderBoard();
+  renderDash();
+  renderHistory();
+}
+
+if (checkAuth()) {
+  document.getElementById('loginScreen').classList.add('hidden');
+  initApp();
+}
+// If not authed, login screen stays visible — initApp called after successful login
 
 </script>
 </body>
