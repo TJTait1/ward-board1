@@ -1,0 +1,1898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ward Org Board</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green-card:#b8eece; --green-border:#2d7a52;
+  --pink-card:#fcd4e4; --pink-border:#e07090;
+  --blue-card:#cce0f5; --blue-border:#5b9bd5;
+  --vacant-card:#ebebeb; --vacant-border:#bbb;
+  --bg:#f0ece4; --surface:#faf8f4; --border:#e0dbd0;
+  --text:#2a2520; --muted:#7a7060;
+  --hdr:#1e1a15; --hdr-text:#f5f0e8; --gold:#c8a96e;
+  --col-w:162px;
+  --action-sustain:#d4edda; --action-sustain-b:#2d7a52;
+  --action-release:#fce4e4; --action-release-b:#c0392b;
+  --action-setapart:#e8eaf6; --action-setapart-b:#3949ab;
+  --action-meet:#fff8e1; --action-meet-b:#f9a825;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+.sync-indicator{font-family:'DM Mono',monospace;font-size:11px;color:#6a6050;padding:4px 8px;border-radius:4px;border:1px solid #3a3028;white-space:nowrap;transition:all .3s}
+.sync-indicator.synced{color:#4caf7d;border-color:#2d7a52}
+.sync-indicator.saving{color:var(--gold);border-color:#6a5030}
+.sync-indicator.error{color:#e07070;border-color:#7a3030}
+/* NAV */
+nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;position:sticky;top:0;z-index:100;border-bottom:2px solid #3a3028;padding:0 1.5rem}
+.ward-title{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;color:var(--hdr-text);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;margin-right:1.5rem}
+.ward-title span{color:var(--gold)}
+.nav-tabs{display:flex;gap:0;height:100%}
+.nav-tab{background:transparent;border:none;border-bottom:2px solid transparent;color:#6a6050;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.05em;text-transform:uppercase;padding:0 14px;cursor:pointer;transition:all .15s;margin-bottom:-2px}
+.nav-tab:hover{color:#aaa090}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+.nav-right{margin-left:auto;display:flex;gap:6px;align-items:center}
+.btn{background:transparent;border:1px solid #4a4030;border-radius:4px;color:#8a8070;font-family:'DM Mono',monospace;font-size:11px;padding:4px 10px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn.accent{background:var(--gold);border-color:var(--gold);color:var(--hdr);font-weight:600}
+.btn.accent:hover{background:#d4b87e}
+.btn.sm{font-size:10px;padding:3px 8px}
+
+/* STATS BAR */
+.stats-bar{background:#2a2520;border-bottom:1px solid #3a3028;padding:0 1.5rem;display:flex;gap:0;align-items:center;flex-wrap:wrap}
+.stat-item{padding:5px 12px 5px 0;display:flex;align-items:baseline;gap:4px}
+.stat-n{font-family:'DM Mono',monospace;font-size:14px;font-weight:500;color:var(--gold)}
+.stat-l{font-size:10px;color:#6a6050;text-transform:uppercase;letter-spacing:.05em}
+.stat-sep{color:#3a3028;padding:0 12px 0 0;font-size:16px;line-height:1;align-self:center}
+.stat-alert{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;background:#7a2d2d;color:#ecb0a8;margin-left:auto;margin-right:0;align-self:center;cursor:pointer}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;padding:.65rem 1.5rem;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.search-box{background:#fff;border:1px solid var(--border);border-radius:4px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;padding:5px 10px;width:180px;outline:none;transition:border-color .2s}
+.search-box:focus{border-color:var(--gold)}
+.filter-pill{background:transparent;border:1px solid var(--border);border-radius:20px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;padding:3px 10px;cursor:pointer;transition:all .15s}
+.filter-pill:hover{border-color:var(--muted)}
+.filter-pill.active{background:var(--gold);border-color:var(--gold);color:var(--hdr);font-weight:600}
+.legend{display:flex;gap:10px;align-items:center;margin-left:auto}
+.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.leg-chip{width:10px;height:10px;border-radius:2px;border-left:3px solid transparent}
+
+/* PAGES */
+.page{display:none}
+.page.active{display:block}
+
+/* BOARD */
+.board-wrap{overflow-x:auto;padding:1.25rem 1.5rem 3rem}
+.board{display:flex;gap:10px;align-items:flex-start;min-width:max-content}
+.column{width:var(--col-w);flex-shrink:0}
+.col-header{background:var(--hdr);color:var(--hdr-text);font-size:10px;font-weight:600;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.07em;padding:6px 8px;border-radius:3px 3px 0 0;text-align:center;line-height:1.3}
+.col-counts{display:flex;gap:3px;justify-content:center;padding:3px 6px;background:#2a2520}
+.count-pill{font-size:9px;font-family:'DM Mono',monospace;padding:1px 5px;border-radius:8px;font-weight:500}
+.count-filled{background:#2d7a52;color:#a8ecc8}
+.count-vacant{background:#7a2d2d;color:#ecb0a8}
+.col-cards{background:#e8e4dc;border:1px solid var(--border);border-top:none;border-radius:0 0 3px 3px;padding:4px;min-height:48px;transition:background .15s}
+.col-cards.drag-over{background:#d4d0c8;border-color:var(--gold)}
+
+/* CARDS */
+.card{padding:4px 7px 5px;margin-bottom:3px;border-radius:3px;font-size:11px;cursor:grab;line-height:1.35;border-left:3px solid transparent;transition:transform .1s,box-shadow .1s,opacity .15s;position:relative}
+.card:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.12);z-index:2}
+.card:active{cursor:grabbing}
+.card.dragging{opacity:.35;transform:scale(.97)}
+.card.leadership{background:var(--green-card);border-left-color:var(--green-border)}
+.card.member{background:var(--pink-card);border-left-color:var(--pink-border)}
+.card.support{background:var(--blue-card);border-left-color:var(--blue-border)}
+.card.vacant{background:var(--vacant-card);border-left-color:var(--vacant-border);opacity:.65;cursor:default}
+.card-name{font-weight:600;font-size:11px;color:#1a1a1a;line-height:1.3}
+.card.vacant .card-name{color:#888;font-style:italic;font-weight:400}
+.card-role{font-size:9.5px;color:#555;margin-top:1px;font-family:'DM Mono',monospace}
+.card.vacant .card-role{color:#aaa}
+.card-meta{font-size:9px;color:#888;margin-top:2px;font-family:'DM Mono',monospace;display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.card-note{font-size:9px;color:#7a6040;background:rgba(200,169,110,.15);border-radius:2px;padding:1px 4px;margin-top:2px;font-style:italic}
+.card-duration-warn{color:#c0392b;font-weight:600}
+.card.dim{opacity:.15}
+.card.highlight{box-shadow:0 0 0 2px var(--gold);opacity:1!important}
+.card.drop-hint-above{box-shadow:0 -2px 0 0 var(--gold)!important;transform:translateY(1px)}
+.add-card-btn{width:100%;margin-top:2px;padding:4px;background:transparent;border:1px dashed #bbb5a8;border-radius:3px;font-size:10px;font-family:'DM Mono',monospace;color:#aaa090;cursor:pointer;text-align:center;transition:all .15s}
+.add-card-btn:hover{border-color:var(--gold);color:var(--gold);background:rgba(200,169,110,.05)}
+.add-col-btn{width:var(--col-w);flex-shrink:0;padding:12px 8px;background:transparent;border:1px dashed #bbb5a8;border-radius:3px;font-size:11px;font-family:'DM Mono',monospace;color:#aaa090;cursor:pointer;text-align:center;align-self:flex-start;transition:all .15s}
+.add-col-btn:hover{border-color:var(--gold);color:var(--gold)}
+
+/* DASHBOARD */
+.dashboard{padding:1.5rem}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:visible}
+.dash-card-header{padding:.65rem 1rem;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);border-radius:8px 8px 0 0;overflow:hidden}
+.dash-card-title{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.07em}
+.dash-badge{font-size:11px;font-weight:600;font-family:'DM Mono',monospace;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.dash-card.sustaining .dash-card-header{border-top:3px solid var(--action-sustain-b);background:var(--action-sustain)}
+.dash-card.sustaining .dash-card-title{color:var(--action-sustain-b)}
+.dash-card.sustaining .dash-badge{background:var(--action-sustain-b);color:#fff}
+.dash-card.releasing .dash-card-header{border-top:3px solid var(--action-release-b);background:var(--action-release)}
+.dash-card.releasing .dash-card-title{color:var(--action-release-b)}
+.dash-card.releasing .dash-badge{background:var(--action-release-b);color:#fff}
+.dash-card.setapart .dash-card-header{border-top:3px solid var(--action-setapart-b);background:var(--action-setapart)}
+.dash-card.setapart .dash-card-title{color:var(--action-setapart-b)}
+.dash-card.setapart .dash-badge{background:var(--action-setapart-b);color:#fff}
+.dash-card.meetwith .dash-card-header{border-top:3px solid var(--action-meet-b);background:var(--action-meet)}
+.dash-card.meetwith .dash-card-title{color:#7a5800}
+.dash-card.meetwith .dash-badge{background:var(--action-meet-b);color:#fff}
+.dash-body{padding:.5rem .75rem .75rem}
+.dash-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;margin-bottom:3px;background:#fff;border:1px solid var(--border);font-size:12px}
+.dash-item-name{font-weight:500;flex:1;color:var(--text)}
+.dash-item-role{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.dash-item-org{font-size:10px;color:var(--muted);margin-top:1px}
+.dash-item-del{background:transparent;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;line-height:1;transition:color .15s}
+.dash-item-del:hover{color:#c0392b}
+.dash-empty{font-size:12px;color:#bbb;font-family:'DM Mono',monospace;padding:.5rem .5rem;text-align:center;font-style:italic}
+.dash-add-row{display:flex;gap:6px;padding:.5rem .75rem .75rem;flex-wrap:wrap}
+.dash-add-row input{flex:1;min-width:80px;font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--text);outline:none}
+.dash-add-row input:focus{border-color:var(--gold)}
+.dash-add-row .btn{font-size:11px;padding:5px 10px}
+.dash-item.done{background:#f0faf4;border-color:#b8e8cc}
+.dash-item.done .dash-item-name{text-decoration:line-through;color:var(--muted)}
+.dash-check{background:transparent;border:1.5px solid #ccc;border-radius:50%;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:11px;color:transparent}
+.dash-check:hover{border-color:var(--action-sustain-b)}
+.dash-item.done .dash-check{background:var(--action-sustain-b);border-color:var(--action-sustain-b);color:#fff}
+
+/* PROGRAM PANEL */
+.program-panel{background:#fff;border:1px solid var(--border);border-radius:8px;margin-top:1.25rem;padding:1.25rem}
+.program-panel h3{font-family:'DM Mono',monospace;font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.75rem}
+.program-text{font-family:'DM Sans',sans-serif;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap;background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:1rem;min-height:80px}
+.program-actions{display:flex;gap:8px;margin-top:.75rem}
+
+/* HISTORY */
+.hist-week{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:1rem;overflow:hidden}
+.hist-week-header{background:#2a2520;padding:.6rem 1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hist-week-label{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);font-weight:500}
+.hist-week-pills{display:flex;gap:5px;flex-wrap:wrap;margin-left:auto}
+.hist-pill{font-size:10px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;font-weight:500}
+.hist-pill.s{background:#2d7a52;color:#a8ecc8}
+.hist-pill.r{background:#7a2d2d;color:#ecb0a8}
+.hist-pill.p{background:#2d3a8a;color:#b0bdf5}
+.hist-pill.m{background:#7a6000;color:#f5d880}
+.hist-sections{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border-top:1px solid var(--border)}
+.hist-section{padding:.65rem 1rem;border-right:1px solid var(--border)}
+.hist-section:last-child{border-right:none}
+.hist-section-title{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem;font-weight:500}
+.hist-section.s .hist-section-title{color:var(--action-sustain-b)}
+.hist-section.r .hist-section-title{color:var(--action-release-b)}
+.hist-section.p .hist-section-title{color:var(--action-setapart-b)}
+.hist-section.m .hist-section-title{color:#7a5800}
+.hist-entry{font-size:12px;color:var(--text);padding:3px 0;display:flex;gap:6px;align-items:baseline;border-bottom:1px solid var(--border)}
+.hist-entry:last-child{border-bottom:none}
+.hist-entry-name{font-weight:500}
+.hist-entry-role{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+.hist-empty{font-size:11px;color:#bbb;font-family:'DM Mono',monospace;font-style:italic}
+
+/* PRINT */
+@media print{
+  nav,.toolbar,.stats-bar,.add-card-btn,.add-col-btn,.ctx-menu,.toast,.modal-bg,
+  .dash-add-row,.program-actions,.btn{display:none!important}
+  .board-wrap{overflow:visible;padding:0}
+  .board{flex-wrap:wrap;gap:8px}
+  .column{width:160px;page-break-inside:avoid}
+  .col-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{background:#fff}
+  .page{display:block!important}
+  #page-dashboard,#page-history,#page-stats{display:none!important}
+}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;width:380px;max-width:90vw;max-height:90vh;overflow-y:auto}
+.modal h3{font-size:14px;font-weight:600;margin-bottom:1rem;font-family:'DM Mono',monospace;color:var(--text)}
+.modal label{display:block;font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;margin-bottom:3px;text-transform:uppercase;letter-spacing:.05em;margin-top:10px}
+.modal label:first-of-type{margin-top:0}
+.modal input,.modal select,.modal textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;background:#fff;color:var(--text);outline:none}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--gold)}
+.modal textarea{resize:vertical;min-height:60px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
+.modal .btn{font-size:12px;padding:6px 14px}
+
+/* MEMBER SEARCH */
+.member-search-wrap{position:relative}
+.member-search-input{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;background:#fff;color:var(--text);outline:none}
+.member-search-input:focus{border-color:var(--gold)}
+.member-dropdown{position:fixed;background:#fff;border:1px solid var(--border);border-radius:4px;max-height:200px;overflow-y:auto;z-index:500;display:none;box-shadow:0 6px 20px rgba(0,0,0,.15);min-width:200px}
+.member-dropdown.open{display:block}
+.member-opt{padding:6px 10px;font-size:12px;cursor:pointer;color:var(--text);transition:background .1s;border-bottom:1px solid #f5f5f5}
+.member-opt:hover{background:#fef9f0}
+.member-opt mark{background:rgba(200,169,110,.35);color:inherit;border-radius:2px}
+
+/* CONTEXT MENU */
+.ctx-menu{display:none;position:fixed;background:var(--hdr);border:1px solid #3a3028;border-radius:4px;z-index:250;min-width:140px;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+.ctx-menu.open{display:block}
+.ctx-item{padding:7px 14px;font-size:12px;font-family:'DM Mono',monospace;color:var(--gold);cursor:pointer;transition:background .1s}
+.ctx-item:hover{background:#2a2520}
+.ctx-item.danger{color:#e07070}
+.ctx-sep{border-top:1px solid #3a3028;margin:2px 0}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--hdr);color:var(--gold);font-family:'DM Mono',monospace;font-size:12px;padding:8px 14px;border-radius:4px;border:1px solid #3a3028;opacity:0;transform:translateY(8px);transition:all .3s;pointer-events:none;z-index:400}
+.toast.show{opacity:1;transform:translateY(0)}
+
+/* STATS PAGE */
+.stats-page{padding:1.5rem}
+.stats-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem}
+.stat-card-n{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--gold);line-height:1}
+.stat-card-l{font-size:11px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace}
+.stat-card-sub{font-size:11px;color:var(--text);margin-top:6px}
+.orgs-table{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.orgs-table-header{display:grid;grid-template-columns:1fr 60px 60px 80px;gap:0;background:#2a2520;padding:.5rem 1rem;font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:#6a6050}
+.orgs-table-row{display:grid;grid-template-columns:1fr 60px 60px 80px;gap:0;padding:.5rem 1rem;border-bottom:1px solid var(--border);font-size:12px;align-items:center}
+.orgs-table-row:last-child{border-bottom:none}
+.orgs-table-row:hover{background:#f5f2ee}
+.fill-bar-wrap{width:60px;height:6px;background:#e8e4dc;border-radius:3px;overflow:hidden}
+.fill-bar{height:100%;border-radius:3px;background:var(--green-border);transition:width .3s}
+.fill-bar.warn{background:#e07070}
+.recently-released{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-top:1.25rem;overflow:hidden}
+.rr-header{background:#2a2520;padding:.6rem 1rem;font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.rr-item{display:flex;align-items:center;gap:10px;padding:.5rem 1rem;border-bottom:1px solid var(--border);font-size:12px}
+.rr-item:last-child{border-bottom:none}
+.rr-name{font-weight:500;flex:1}
+.rr-meta{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<nav>
+  <div class="ward-title">Ward <span>Board</span></div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('board',this)">Org Chart</button>
+    <button class="nav-tab" onclick="showPage('dashboard',this)">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('stats',this)">Stats</button>
+    <button class="nav-tab" onclick="showPage('history',this)">History</button>
+  </div>
+  <div class="nav-right">
+    <div id="syncIndicator" class="sync-indicator" title="Sync status">⬤ connecting...</div>
+    <button class="btn sm" onclick="window.print()" title="Print org chart">Print</button>
+    <button class="btn sm" onclick="exportCSV()">CSV</button>
+    <button class="btn sm accent" onclick="openAddCol()">+ Org</button>
+  </div>
+</nav>
+
+<!-- ORG CHART PAGE -->
+<div class="page active" id="page-board">
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="toolbar">
+    <input class="search-box" type="text" id="search" placeholder="Search name or calling... (N)" oninput="handleSearch()">
+    <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-pill" onclick="setFilter('filled',this)">Filled</button>
+    <button class="filter-pill" onclick="setFilter('vacant',this)">Vacant</button>
+    <button class="filter-pill" onclick="setFilter('leadership',this)">Leadership</button>
+    <button class="filter-pill" onclick="setFilter('longserving',this)">Long Serving</button>
+    <div class="legend">
+      <div class="leg"><div class="leg-chip" style="background:var(--green-card);border-left-color:var(--green-border)"></div>Leadership</div>
+      <div class="leg"><div class="leg-chip" style="background:var(--pink-card);border-left-color:var(--pink-border)"></div>Member</div>
+      <div class="leg"><div class="leg-chip" style="background:var(--blue-card);border-left-color:var(--blue-border)"></div>Support</div>
+    </div>
+  </div>
+  <div class="board-wrap"><div class="board" id="board"></div></div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div class="page" id="page-dashboard">
+  <div class="dashboard">
+    <div class="dash-grid">
+      <div class="dash-card sustaining">
+        <div class="dash-card-header"><span class="dash-card-title">Sustainings</span><span class="dash-badge" id="badge-sustaining">0</span></div>
+        <div class="dash-body" id="list-sustaining"></div>
+        <div class="dash-add-row">
+          <div class="member-search-wrap" style="flex:1.2">
+            <input class="member-search-input" type="text" placeholder="Search member..." id="input-sustaining" oninput="filterMembers('sustaining')" autocomplete="off">
+            <div class="member-dropdown" id="drop-sustaining"></div>
+          </div>
+          <input type="text" placeholder="Calling..." id="role-sustaining">
+          <button class="btn accent" onclick="addDashItem('sustaining')">Add</button>
+        </div>
+      </div>
+      <div class="dash-card releasing">
+        <div class="dash-card-header"><span class="dash-card-title">Releasings</span><span class="dash-badge" id="badge-releasing">0</span></div>
+        <div class="dash-body" id="list-releasing"></div>
+        <div class="dash-add-row">
+          <div class="member-search-wrap" style="flex:1.2">
+            <input class="member-search-input" type="text" placeholder="Search member..." id="input-releasing" oninput="filterMembers('releasing')" autocomplete="off">
+            <div class="member-dropdown" id="drop-releasing"></div>
+          </div>
+          <input type="text" placeholder="From calling..." id="role-releasing">
+          <button class="btn accent" onclick="addDashItem('releasing')">Add</button>
+        </div>
+      </div>
+      <div class="dash-card setapart">
+        <div class="dash-card-header"><span class="dash-card-title">Setting Apart</span><span class="dash-badge" id="badge-setapart">0</span></div>
+        <div class="dash-body" id="list-setapart"></div>
+        <div class="dash-add-row">
+          <div class="member-search-wrap" style="flex:1.2">
+            <input class="member-search-input" type="text" placeholder="Search member..." id="input-setapart" oninput="filterMembers('setapart')" autocomplete="off">
+            <div class="member-dropdown" id="drop-setapart"></div>
+          </div>
+          <input type="text" placeholder="Calling..." id="role-setapart">
+          <button class="btn accent" onclick="addDashItem('setapart')">Add</button>
+        </div>
+      </div>
+      <div class="dash-card meetwith">
+        <div class="dash-card-header"><span class="dash-card-title">Meet With</span><span class="dash-badge" id="badge-meetwith">0</span></div>
+        <div class="dash-body" id="list-meetwith"></div>
+        <div class="dash-add-row">
+          <div class="member-search-wrap" style="flex:1.2">
+            <input class="member-search-input" type="text" placeholder="Search member..." id="input-meetwith" oninput="filterMembers('meetwith')" autocomplete="off">
+            <div class="member-dropdown" id="drop-meetwith"></div>
+          </div>
+          <input type="text" placeholder="Reason / note..." id="role-meetwith">
+          <button class="btn accent" onclick="addDashItem('meetwith')">Add</button>
+        </div>
+      </div>
+    </div>
+    <!-- SACRAMENT PROGRAM GENERATOR -->
+    <div class="program-panel">
+      <h3>Sacrament Meeting Announcement Generator</h3>
+      <div class="program-text" id="programText">Add sustainings and releasings above to generate the announcement text.</div>
+      <div class="program-actions">
+        <button class="btn" onclick="generateProgram()">Generate Announcement</button>
+        <button class="btn accent" onclick="copyProgram()">Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STATS PAGE -->
+<div class="page" id="page-stats">
+  <div class="stats-page" id="statsPageContent"></div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div class="page" id="page-history">
+  <div class="dashboard">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;flex-wrap:wrap">
+      <div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em">Week of</div>
+      <select id="historyWeekFilter" onchange="renderHistory()" style="font-size:12px;padding:5px 10px;border:1px solid var(--border);border-radius:4px;background:#fff;color:var(--text);font-family:'DM Mono',monospace;outline:none;min-width:180px"></select>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn" onclick="exportHistoryCSV()">Export History CSV</button>
+        <button class="btn accent" onclick="archiveCurrentWeek()">Archive This Week ✓</button>
+      </div>
+    </div>
+    <div id="historyContent"></div>
+  </div>
+</div>
+
+<!-- Add Card Modal -->
+<div class="modal-bg" id="addCardModal">
+  <div class="modal">
+    <h3 id="addCardTitle">Add Calling</h3>
+    <label>Member Name</label>
+    <div class="member-search-wrap">
+      <input class="member-search-input" type="text" id="modalMemberSearch" placeholder="Search ward member..." oninput="filterMembers('modal')" autocomplete="off">
+      <div class="member-dropdown" id="drop-modal"></div>
+    </div>
+    <input type="hidden" id="modalMemberRaw">
+    <label>Calling / Role</label>
+    <input type="text" id="newCardRole" placeholder="e.g. Committee Member">
+    <label>Type</label>
+    <select id="newCardType">
+      <option value="member">Member (pink)</option>
+      <option value="leadership">Leadership (green)</option>
+      <option value="support">Support (blue)</option>
+      <option value="vacant">Vacant (gray)</option>
+    </select>
+    <label>Sustained Date (optional)</label>
+    <input type="date" id="newCardDate">
+    <label>Notes (optional)</label>
+    <textarea id="newCardNotes" placeholder="e.g. Needs to be set apart, moving in June..."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addCardModal')">Cancel</button>
+      <button class="btn accent" onclick="confirmAddCard()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Column Modal -->
+<div class="modal-bg" id="addColModal">
+  <div class="modal">
+    <h3>Add Organization</h3>
+    <label>Organization Name</label>
+    <input type="text" id="newColName" placeholder="e.g. Ward Council">
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('addColModal')">Cancel</button>
+      <button class="btn accent" onclick="confirmAddCol()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Card Modal -->
+<div class="modal-bg" id="editCardModal">
+  <div class="modal">
+    <h3>Edit Calling</h3>
+    <label>Member Name</label>
+    <div class="member-search-wrap">
+      <input class="member-search-input" type="text" id="editMemberSearch" placeholder="Search ward member..." oninput="filterMembers('editmodal')" autocomplete="off">
+      <div class="member-dropdown" id="drop-editmodal"></div>
+    </div>
+    <input type="hidden" id="editMemberRaw">
+    <label>Calling / Role</label>
+    <input type="text" id="editCardRole">
+    <label>Type</label>
+    <select id="editCardType">
+      <option value="member">Member (pink)</option>
+      <option value="leadership">Leadership (green)</option>
+      <option value="support">Support (blue)</option>
+      <option value="vacant">Vacant (gray)</option>
+    </select>
+    <label>Sustained Date (optional)</label>
+    <input type="date" id="editCardDate">
+    <label>Notes (optional)</label>
+    <textarea id="editCardNotes" placeholder="e.g. Needs to be set apart, moving in June..."></textarea>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('editCardModal')">Cancel</button>
+      <button class="btn accent" onclick="confirmEditCard()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div class="ctx-menu" id="ctxMenu">
+  <div class="ctx-item" onclick="ctxEdit()">Edit / Notes</div>
+  <div class="ctx-item" onclick="ctxMarkVacant()">Mark Vacant</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="ctxSendTo('sustaining')">+ Sustaining</div>
+  <div class="ctx-item" onclick="ctxSendTo('releasing')">+ Releasing</div>
+  <div class="ctx-item" onclick="ctxSendTo('setapart')">+ Set Apart</div>
+  <div class="ctx-item" onclick="ctxSendTo('meetwith')">+ Meet With</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="ctxDelete()">Delete</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MEMBERS = [
+  {raw:'Abbott, Joshua Myron', display:'Joshua Myron Abbott'},
+  {raw:'Adcox, Abbie', display:'Abbie Adcox'},
+  {raw:'Aguirre, Camila', display:'Camila Aguirre'},
+  {raw:'Ahlstrom, Reed', display:'Reed Ahlstrom'},
+  {raw:'Alexis, Dieuvenue', display:'Dieuvenue Alexis'},
+  {raw:'Allee, Ava', display:'Ava Allee'},
+  {raw:'Allee, Tanner', display:'Tanner Allee'},
+  {raw:'Allen, Bret', display:'Bret Allen'},
+  {raw:'Allen, Daphne Georgia', display:'Daphne Georgia Allen'},
+  {raw:'Allen, Tathan', display:'Tathan Allen'},
+  {raw:'Alvord, Corbin', display:'Corbin Alvord'},
+  {raw:'Anderson, Amanda', display:'Amanda Anderson'},
+  {raw:'Anderson, Ashleigh', display:'Ashleigh Anderson'},
+  {raw:'Anderson, James', display:'James Anderson'},
+  {raw:'Anderson, Josie', display:'Josie Anderson'},
+  {raw:'Anderson, Monson Joseph', display:'Monson Joseph Anderson'},
+  {raw:'Anderson, Straton', display:'Straton Anderson'},
+  {raw:'Andrus, Peyton', display:'Peyton Andrus'},
+  {raw:'Asay, Eli', display:'Eli Asay'},
+  {raw:'Asbury, Jada', display:'Jada Asbury'},
+  {raw:'Bailey, William', display:'William Bailey'},
+  {raw:'Baltazar, Saray Mercado', display:'Saray Mercado Baltazar'},
+  {raw:'Bangerter, Sage', display:'Sage Bangerter'},
+  {raw:'Banks, Bridger', display:'Bridger Banks'},
+  {raw:'Barlow, John', display:'John Barlow'},
+  {raw:'Barnes, Colleen', display:'Colleen Barnes'},
+  {raw:'Barney, Austin', display:'Austin Barney'},
+  {raw:'Barrera, Nicole Odette', display:'Nicole Odette Barrera'},
+  {raw:'Barrus, Chloe', display:'Chloe Barrus'},
+  {raw:'Barton, Maddie', display:'Maddie Barton'},
+  {raw:'Baxter, Avery K', display:'Avery K Baxter'},
+  {raw:'Becerra, Isabel', display:'Isabel Becerra'},
+  {raw:'Beckett, Ellie', display:'Ellie Beckett'},
+  {raw:'Beckstead, Austin', display:'Austin Beckstead'},
+  {raw:'Berg, Lane', display:'Lane Berg'},
+  {raw:'Berrett, Addy', display:'Addy Berrett'},
+  {raw:'Bezzant, Mitchell', display:'Mitchell Bezzant'},
+  {raw:'Biasi, David Leonardo', display:'David Leonardo Biasi'},
+  {raw:'Bishop, Grace', display:'Grace Bishop'},
+  {raw:'Black, Jayden', display:'Jayden Black'},
+  {raw:'Blasini, Jackie', display:'Jackie Blasini'},
+  {raw:'Blatter, Tanner Hyrum', display:'Tanner Hyrum Blatter'},
+  {raw:'Bloom, Donovan', display:'Donovan Bloom'},
+  {raw:'Bluth, Ruby', display:'Ruby Bluth'},
+  {raw:'Boddy, Tristan', display:'Tristan Boddy'},
+  {raw:'Bodily, Paige', display:'Paige Bodily'},
+  {raw:'Boren, Blaze', display:'Blaze Boren'},
+  {raw:'Boren, Drake Ellis', display:'Drake Ellis Boren'},
+  {raw:'Boren, Hyrum Craig', display:'Hyrum Craig Boren'},
+  {raw:'Boss, Keaton', display:'Keaton Boss'},
+  {raw:'Bowman, Hans', display:'Hans Bowman'},
+  {raw:'Bowman, Nathan Craig', display:'Nathan Craig Bowman'},
+  {raw:'Brenay, Owen', display:'Owen Brenay'},
+  {raw:'Brimhall, London', display:'London Brimhall'},
+  {raw:'Brousseau, Addison Kathryn', display:'Addison Kathryn Brousseau'},
+  {raw:'Buchholz, Wesley', display:'Wesley Buchholz'},
+  {raw:'Bulpitt, Nathan Taylor', display:'Nathan Taylor Bulpitt'},
+  {raw:'Bulpitt, Trevor Richard', display:'Trevor Richard Bulpitt'},
+  {raw:'Burr, Emme', display:'Emme Burr'},
+  {raw:'Buxton, Sophie', display:'Sophie Buxton'},
+  {raw:'Cadenas Euceda, Darwin', display:'Darwin Cadenas Euceda'},
+  {raw:'Call, Ellie', display:'Ellie Call'},
+  {raw:'Campbell, Luke', display:'Luke Campbell'},
+  {raw:'Candland, Brooke Eva', display:'Brooke Eva Candland'},
+  {raw:'Cardon, James', display:'James Cardon'},
+  {raw:'Carter, Logan Christopher', display:'Logan Christopher Carter'},
+  {raw:'Cella, Keelee', display:'Keelee Cella'},
+  {raw:'Chanthakhoun, Paula', display:'Paula Chanthakhoun'},
+  {raw:'Chase, Nathan Benjamin', display:'Nathan Benjamin Chase'},
+  {raw:'Chatfield, Kaylee', display:'Kaylee Chatfield'},
+  {raw:'Chavez, Melissa', display:'Melissa Chavez'},
+  {raw:'Chesley, Gwendalin', display:'Gwendalin Chesley'},
+  {raw:'Christensen, Brady', display:'Brady Christensen'},
+  {raw:'Christensen, Haylee Nicole', display:'Haylee Nicole Christensen'},
+  {raw:'Christenson, Gracy', display:'Gracy Christenson'},
+  {raw:'Christianson, Jordan Brock', display:'Jordan Brock Christianson'},
+  {raw:'Clark, Isabella Nicole', display:'Isabella Nicole Clark'},
+  {raw:'Cline, Gideon', display:'Gideon Cline'},
+  {raw:'Cluff, Jayson', display:'Jayson Cluff'},
+  {raw:'Cluff, Julie', display:'Julie Cluff'},
+  {raw:'Coder, Cami', display:'Cami Coder'},
+  {raw:'Conley, Tessa', display:'Tessa Conley'},
+  {raw:'Cook, Cassidy', display:'Cassidy Cook'},
+  {raw:'Cook, Halli', display:'Halli Cook'},
+  {raw:'Cordon, Khaila Samantha', display:'Khaila Samantha Cordon'},
+  {raw:'Cowan, McKenzi Faith', display:'McKenzi Faith Cowan'},
+  {raw:'Cozart, Haley', display:'Haley Cozart'},
+  {raw:'Crandall, Brynlee', display:'Brynlee Crandall'},
+  {raw:'Crandall, Carter', display:'Carter Crandall'},
+  {raw:'Crandall, Sadie', display:'Sadie Crandall'},
+  {raw:'Crook, Kylee', display:'Kylee Crook'},
+  {raw:'Daclan, Lil Aenon Dee Timog', display:'Lil Aenon Dee Timog Daclan'},
+  {raw:'Dahlberg, Easton', display:'Easton Dahlberg'},
+  {raw:'Davis, Brynnli Michelle', display:'Brynnli Michelle Davis'},
+  {raw:'Davis, Maxwell', display:'Maxwell Davis'},
+  {raw:'Dayton, Tate', display:'Tate Dayton'},
+  {raw:'De La Cruz La Rosa, Silvana Ruthie', display:'Silvana Ruthie De La Cruz La Rosa'},
+  {raw:'DeGroff, Kevin', display:'Kevin DeGroff'},
+  {raw:'Delis, Nathan', display:'Nathan Delis'},
+  {raw:'DeMille, Abbey', display:'Abbey DeMille'},
+  {raw:'Denos, Caleb Jay', display:'Caleb Jay Denos'},
+  {raw:'Dene, Ashtin', display:'Ashtin Dene'},
+  {raw:'Dias, Samuel Vasconcelos Mota', display:'Samuel Vasconcelos Mota Dias'},
+  {raw:'Dirks, Gavin Robert', display:'Gavin Robert Dirks'},
+  {raw:'Dopp, Kirsten', display:'Kirsten Dopp'},
+  {raw:'Doty, Cambria Elizabeth', display:'Cambria Elizabeth Doty'},
+  {raw:'Drake, Courtlyn', display:'Courtlyn Drake'},
+  {raw:'Dray, Payton', display:'Payton Dray'},
+  {raw:'Dudley, Maddie', display:'Maddie Dudley'},
+  {raw:'Duncan, Mara', display:'Mara Duncan'},
+  {raw:'Eastman, Alyssa Jane', display:'Alyssa Jane Eastman'},
+  {raw:'Easton, Colton Aaron', display:'Colton Aaron Easton'},
+  {raw:'Easton, Madison Paige', display:'Madison Paige Easton'},
+  {raw:'Edwards, Caden Michael', display:'Caden Michael Edwards'},
+  {raw:'Edwards, Parker', display:'Parker Edwards'},
+  {raw:'Ehmann, Audrey Marlana', display:'Audrey Marlana Ehmann'},
+  {raw:'Ekblad, Sam', display:'Sam Ekblad'},
+  {raw:'Eldredge, Preston James', display:'Preston James Eldredge'},
+  {raw:'Ellsworth, Tanner', display:'Tanner Ellsworth'},
+  {raw:'Ewing, London Hill', display:'London Hill Ewing'},
+  {raw:'Fankhauser, Gaberiel', display:'Gaberiel Fankhauser'},
+  {raw:'Faria, Lauren', display:'Lauren Faria'},
+  {raw:'Farias, Barbara', display:'Barbara Farias'},
+  {raw:'Farnsworth, Tanner', display:'Tanner Farnsworth'},
+  {raw:'Favero, Ava Rae', display:'Ava Rae Favero'},
+  {raw:'Felix, Amanda', display:'Amanda Felix'},
+  {raw:'Finklea, Blake Hillstead', display:'Blake Hillstead Finklea'},
+  {raw:'Fish, Isabela', display:'Isabela Fish'},
+  {raw:'Flagmeier, Emily Nicole', display:'Emily Nicole Flagmeier'},
+  {raw:'Flanigan, Jared', display:'Jared Flanigan'},
+  {raw:'Flores Henriquez, Omar Alberto', display:'Omar Alberto Flores Henriquez'},
+  {raw:'Flores, Kaitlin', display:'Kaitlin Flores'},
+  {raw:'Fogt, Sierra', display:'Sierra Fogt'},
+  {raw:'Forsberg, Hunter', display:'Hunter Forsberg'},
+  {raw:'Forsberg, Spencer', display:'Spencer Forsberg'},
+  {raw:'Franco, Roman', display:'Roman Franco'},
+  {raw:'Frank, Trevor', display:'Trevor Frank'},
+  {raw:'Franklin, Paige', display:'Paige Franklin'},
+  {raw:'Frost, Isaac', display:'Isaac Frost'},
+  {raw:'Fry, Sophia', display:'Sophia Fry'},
+  {raw:'Fullen, Ethan', display:'Ethan Fullen'},
+  {raw:'Fuller, Adam', display:'Adam Fuller'},
+  {raw:'Gammell, Cailey', display:'Cailey Gammell'},
+  {raw:'Garcia, Isaac', display:'Isaac Garcia'},
+  {raw:'Gardner, Ainsley', display:'Ainsley Gardner'},
+  {raw:'Gardner, Conner', display:'Conner Gardner'},
+  {raw:'Genet, Reese', display:'Reese Genet'},
+  {raw:'Giatras, Sally', display:'Sally Giatras'},
+  {raw:'Gifford, Katie', display:'Katie Gifford'},
+  {raw:'Gneiting, Brylee', display:'Brylee Gneiting'},
+  {raw:'Godfrey, Weston', display:'Weston Godfrey'},
+  {raw:'Golightly, Gabrielle', display:'Gabrielle Golightly'},
+  {raw:'Gomez, Santiago', display:'Santiago Gomez'},
+  {raw:'Goodman, Brekyn', display:'Brekyn Goodman'},
+  {raw:'Goodrich, Sofia', display:'Sofia Goodrich'},
+  {raw:'Goodsell, Faye', display:'Faye Goodsell'},
+  {raw:'Graham, Lily', display:'Lily Graham'},
+  {raw:'Graham, Randy', display:'Randy Graham'},
+  {raw:'Graves, Maylie', display:'Maylie Graves'},
+  {raw:'Gray, Naomi', display:'Naomi Gray'},
+  {raw:'Gray, Rock', display:'Rock Gray'},
+  {raw:'Green, Lissy', display:'Lissy Green'},
+  {raw:'Greenlaw, Trevor', display:'Trevor Greenlaw'},
+  {raw:'Gregersen, Andrew Ryan', display:'Andrew Ryan Gregersen'},
+  {raw:'Griffiths, Bret', display:'Bret Griffiths'},
+  {raw:'Hafen, Cassidy Kay', display:'Cassidy Kay Hafen'},
+  {raw:'Hair, Landon Joseph', display:'Landon Joseph Hair'},
+  {raw:'Hale, Molly Hazel', display:'Molly Hazel Hale'},
+  {raw:'Hales, Camille', display:'Camille Hales'},
+  {raw:'Hanks, Owen', display:'Owen Hanks'},
+  {raw:'Hansen, Parker Jay', display:'Parker Jay Hansen'},
+  {raw:'Harker, Bella', display:'Bella Harker'},
+  {raw:'Harker, Kamryn', display:'Kamryn Harker'},
+  {raw:'Harrington, Evan', display:'Evan Harrington'},
+  {raw:'Harris, Alayna', display:'Alayna Harris'},
+  {raw:'Harris, Alyssa', display:'Alyssa Harris'},
+  {raw:'Harris, JoJo', display:'JoJo Harris'},
+  {raw:'Harris, Sara', display:'Sara Harris'},
+  {raw:'Hawkins, Kate', display:'Kate Hawkins'},
+  {raw:'Haymore, Jade', display:'Jade Haymore'},
+  {raw:'Headrick, Tanner', display:'Tanner Headrick'},
+  {raw:'Henwood, Izzy', display:'Izzy Henwood'},
+  {raw:'Herbst, Hailey', display:'Hailey Herbst'},
+  {raw:'Hibbert, Jacob', display:'Jacob Hibbert'},
+  {raw:'Higgins, Amber', display:'Amber Higgins'},
+  {raw:'Hillstead, McCae', display:'McCae Hillstead'},
+  {raw:'Hirschi, Halle', display:'Halle Hirschi'},
+  {raw:'Holiday, Tiffany', display:'Tiffany Holiday'},
+  {raw:'Holm, Maci Lea', display:'Maci Lea Holm'},
+  {raw:'Holman, Madeline', display:'Madeline Holman'},
+  {raw:'Holman, Samantha', display:'Samantha Holman'},
+  {raw:'Holt, Dillon', display:'Dillon Holt'},
+  {raw:'Hone, Porter', display:'Porter Hone'},
+  {raw:'Hoopes, Aubrey', display:'Aubrey Hoopes'},
+  {raw:'Howe, Chloe Elle', display:'Chloe Elle Howe'},
+  {raw:'Howse, Lea', display:'Lea Howse'},
+  {raw:'Huerta Campos, Yuritzi Yunuen', display:'Yuritzi Yunuen Huerta Campos'},
+  {raw:'Huffaker, Jack', display:'Jack Huffaker'},
+  {raw:'Hughes, Hannah', display:'Hannah Hughes'},
+  {raw:'Hughes, Nathan', display:'Nathan Hughes'},
+  {raw:'Hughes, Nathaniel', display:'Nathaniel Hughes'},
+  {raw:'Hughes, Tobler', display:'Tobler Hughes'},
+  {raw:'Hunt, Mckenzey', display:'Mckenzey Hunt'},
+  {raw:'Ioannou, James', display:'James Ioannou'},
+  {raw:'Jaggi, Amelia', display:'Amelia Jaggi'},
+  {raw:'Jaime Obregon, Olimar', display:'Olimar Jaime Obregon'},
+  {raw:'James, Samson', display:'Samson James'},
+  {raw:'Jensen, Elyse', display:'Elyse Jensen'},
+  {raw:'Jensen, Hannah Grace', display:'Hannah Grace Jensen'},
+  {raw:'Jeppesen, Noah', display:'Noah Jeppesen'},
+  {raw:'Jewell, James Winton', display:'James Winton Jewell'},
+  {raw:'Johnson, Grace Kathleen', display:'Grace Kathleen Johnson'},
+  {raw:'Johnson, Laynee', display:'Laynee Johnson'},
+  {raw:'Johnson, Paige', display:'Paige Johnson'},
+  {raw:'Jones, Joshua', display:'Joshua Jones'},
+  {raw:'Kabonic, Avery', display:'Avery Kabonic'},
+  {raw:'Kelly, Mayson', display:'Mayson Kelly'},
+  {raw:'Kennedy, Maren', display:'Maren Kennedy'},
+  {raw:'Kesler, Savannah', display:'Savannah Kesler'},
+  {raw:'King, Madison', display:'Madison King'},
+  {raw:'Klein, Bailee', display:'Bailee Klein'},
+  {raw:'Knowles, Tanner', display:'Tanner Knowles'},
+  {raw:'Knowlton, Lindsey', display:'Lindsey Knowlton'},
+  {raw:'Kober, Summerlynn', display:'Summerlynn Kober'},
+  {raw:'Krietemeyer, Bailee Jo', display:'Bailee Jo Krietemeyer'},
+  {raw:'Lambson, Luke', display:'Luke Lambson'},
+  {raw:'Landazuri, Erin Lindsay', display:'Erin Lindsay Landazuri'},
+  {raw:'Langford, Anthony', display:'Anthony Langford'},
+  {raw:'Larson, Ben', display:'Ben Larson'},
+  {raw:'Leavitt, Lauren Mikel', display:'Lauren Mikel Leavitt'},
+  {raw:'Leidy, Calvin', display:'Calvin Leidy'},
+  {raw:'Lewis, Annesley', display:'Annesley Lewis'},
+  {raw:'Lewis, Benjamin Thomas', display:'Benjamin Thomas Lewis'},
+  {raw:'Lewis, Decker McKay', display:'Decker McKay Lewis'},
+  {raw:'Lewis, Joshua', display:'Joshua Lewis'},
+  {raw:'Logan, Joseph', display:'Joseph Logan'},
+  {raw:'Lopez, Adrian', display:'Adrian Lopez'},
+  {raw:'Lopez, Christian', display:'Christian Lopez'},
+  {raw:'Lord, Victoria', display:'Victoria Lord'},
+  {raw:'Lucero, Joey', display:'Joey Lucero'},
+  {raw:'Lundberg, Carly', display:'Carly Lundberg'},
+  {raw:'Macfarlane, Cabe', display:'Cabe Macfarlane'},
+  {raw:'Machado Llanas, Litzy Marina', display:'Litzy Marina Machado Llanas'},
+  {raw:'Mangum, Kate', display:'Kate Mangum'},
+  {raw:'Manner, Witlee', display:'Witlee Manner'},
+  {raw:'Marshall, Rebekah', display:'Rebekah Marshall'},
+  {raw:'Matute Henriquez, Heber Jose', display:'Heber Jose Matute Henriquez'},
+  {raw:'Matute, Bella Marcela', display:'Bella Marcela Matute'},
+  {raw:'Maxfield, Gracelynn Marie', display:'Gracelynn Marie Maxfield'},
+  {raw:'McCann, Madi', display:'Madi McCann'},
+  {raw:'McClean, Katy', display:'Katy McClean'},
+  {raw:'McIlnay, Janessa', display:'Janessa McIlnay'},
+  {raw:'McKinnon, Nicole', display:'Nicole McKinnon'},
+  {raw:'McLaws, Miles', display:'Miles McLaws'},
+  {raw:'Mcpherson, Caden', display:'Caden Mcpherson'},
+  {raw:'McWhorter, Rebecca', display:'Rebecca McWhorter'},
+  {raw:'Mehlhoff, Milo', display:'Milo Mehlhoff'},
+  {raw:'Michaelis, Garrett', display:'Garrett Michaelis'},
+  {raw:'Mohan, Natalie', display:'Natalie Mohan'},
+  {raw:'Monroy, Alan Armando', display:'Alan Armando Monroy'},
+  {raw:'Mooney, Avery', display:'Avery Mooney'},
+  {raw:'Morley, Brooke', display:'Brooke Morley'},
+  {raw:'Morris, Avery', display:'Avery Morris'},
+  {raw:'Morris, Pearce', display:'Pearce Morris'},
+  {raw:'Morrison, Taylor', display:'Taylor Morrison'},
+  {raw:'Mortensen, Jacob Ryan', display:'Jacob Ryan Mortensen'},
+  {raw:'Mukubu, Banza Elie La Victoire', display:'Banza Elie La Victoire Mukubu'},
+  {raw:'Munoz Salamanca, Sebastian Rodrigo', display:'Sebastian Rodrigo Munoz Salamanca'},
+  {raw:'Myers, Ashton', display:'Ashton Myers'},
+  {raw:'Nerdin, Logan', display:'Logan Nerdin'},
+  {raw:'Newman, Eli Cole', display:'Eli Cole Newman'},
+  {raw:'Nielsen, Victoria Ashlyn', display:'Victoria Ashlyn Nielsen'},
+  {raw:'Nisbet, Ethan', display:'Ethan Nisbet'},
+  {raw:'Nissinen, Joe', display:'Joe Nissinen'},
+  {raw:'Nuttall, Justine', display:'Justine Nuttall'},
+  {raw:'Nyborg, Jessica', display:'Jessica Nyborg'},
+  {raw:'Nye, Annika', display:'Annika Nye'},
+  {raw:'Olenslager, Megan', display:'Megan Olenslager'},
+  {raw:'Olsen, Ella', display:'Ella Olsen'},
+  {raw:'Olsen, Sara', display:'Sara Olsen'},
+  {raw:'Orton, Abby', display:'Abby Orton'},
+  {raw:'Ostler, Connor', display:'Connor Ostler'},
+  {raw:'Owen, Emily Samantha', display:'Emily Samantha Owen'},
+  {raw:'Oyler, Shaena', display:'Shaena Oyler'},
+  {raw:'Painter, Cason', display:'Cason Painter'},
+  {raw:'Parr, Ashley', display:'Ashley Parr'},
+  {raw:'Peatross, Jocelyn Paige', display:'Jocelyn Paige Peatross'},
+  {raw:'Peel, Sara', display:'Sara Peel'},
+  {raw:'Pendleton, Elena', display:'Elena Pendleton'},
+  {raw:'Pendleton, Miriam', display:'Miriam Pendleton'},
+  {raw:'Penrod, McKay David', display:'McKay David Penrod'},
+  {raw:'Penrose, Katie', display:'Katie Penrose'},
+  {raw:'Petersen, Chelsea', display:'Chelsea Petersen'},
+  {raw:'Peterson, Celeste', display:'Celeste Peterson'},
+  {raw:'Peterson, Monet', display:'Monet Peterson'},
+  {raw:'Pettingill, Holland', display:'Holland Pettingill'},
+  {raw:'Pinkham, Missy', display:'Missy Pinkham'},
+  {raw:'Polanco, Pablo S', display:'Pablo S Polanco'},
+  {raw:'Porter, Kaycee', display:'Kaycee Porter'},
+  {raw:'Pospisil, Kimberly', display:'Kimberly Pospisil'},
+  {raw:'Poulton, Olivia', display:'Olivia Poulton'},
+  {raw:'Pratte, Seth', display:'Seth Pratte'},
+  {raw:'Price, Jessica', display:'Jessica Price'},
+  {raw:'Price, Madison', display:'Madison Price'},
+  {raw:'Pritchett, Amanda', display:'Amanda Pritchett'},
+  {raw:'Pritchett, Christina', display:'Christina Pritchett'},
+  {raw:'Ramsey, RyLee', display:'RyLee Ramsey'},
+  {raw:'Raven, Breck', display:'Breck Raven'},
+  {raw:'Rawson, Riley Nicole', display:'Riley Nicole Rawson'},
+  {raw:'Read, Logan', display:'Logan Read'},
+  {raw:'Reid, Julie', display:'Julie Reid'},
+  {raw:'Reid, Matt', display:'Matt Reid'},
+  {raw:'Restrepo, Edisson', display:'Edisson Restrepo'},
+  {raw:'Reynolds, Parker', display:'Parker Reynolds'},
+  {raw:'Richards, Eve Rachelle', display:'Eve Rachelle Richards'},
+  {raw:'Roberts, Barrett', display:'Barrett Roberts'},
+  {raw:'Roberts, Grant', display:'Grant Roberts'},
+  {raw:'Rockwood, Bode', display:'Bode Rockwood'},
+  {raw:'Rodas, Tiffany', display:'Tiffany Rodas'},
+  {raw:'Romney, Kaylee', display:'Kaylee Romney'},
+  {raw:'Rowbury, Carmen', display:'Carmen Rowbury'},
+  {raw:'Ruger, Connor', display:'Connor Ruger'},
+  {raw:'Rustand, Jackson James', display:'Jackson James Rustand'},
+  {raw:'Ryan, Emery Claire', display:'Emery Claire Ryan'},
+  {raw:'Sacolles, Ethan', display:'Ethan Sacolles'},
+  {raw:'Sacolles, Meeya', display:'Meeya Sacolles'},
+  {raw:'Salamanca Garay, Augusto', display:'Augusto Salamanca Garay'},
+  {raw:'Salisbury, Trace', display:'Trace Salisbury'},
+  {raw:'Schagel, Austin Michael', display:'Austin Michael Schagel'},
+  {raw:'Schultz, Laney McKell', display:'Laney McKell Schultz'},
+  {raw:'Seager, Olivia', display:'Olivia Seager'},
+  {raw:'Sever, Dillon', display:'Dillon Sever'},
+  {raw:'Sewell, Joshua', display:'Joshua Sewell'},
+  {raw:'Sherlock, Elise', display:'Elise Sherlock'},
+  {raw:'Shrader, Sophie', display:'Sophie Shrader'},
+  {raw:'Shumway, Kiera Paige', display:'Kiera Paige Shumway'},
+  {raw:'Shumway, Steven', display:'Steven Shumway'},
+  {raw:'Smith, Jacob', display:'Jacob Smith'},
+  {raw:'Smith, Kaden', display:'Kaden Smith'},
+  {raw:'Smith, Mason', display:'Mason Smith'},
+  {raw:'Solomon, Bailey', display:'Bailey Solomon'},
+  {raw:'Sopena, Parkar Bensen', display:'Parkar Bensen Sopena'},
+  {raw:'Soro, Doni', display:'Doni Soro'},
+  {raw:'Spenst, Jax', display:'Jax Spenst'},
+  {raw:'Stewart, Laurynn Cole', display:'Laurynn Cole Stewart'},
+  {raw:'Strunk, Samantha', display:'Samantha Strunk'},
+  {raw:'Summers, Stockton Haslam', display:'Stockton Haslam Summers'},
+  {raw:'Swindle, Devin', display:'Devin Swindle'},
+  {raw:'Tait, Ava Nicole', display:'Ava Nicole Tait'},
+  {raw:'Tait, Kenzie', display:'Kenzie Tait'},
+  {raw:'Tait, TJ', display:'TJ Tait'},
+  {raw:'Tamai, Kianna McKayla', display:'Kianna McKayla Tamai'},
+  {raw:'Taylor, Afton', display:'Afton Taylor'},
+  {raw:'Taylor, Jeffrey', display:'Jeffrey Taylor'},
+  {raw:'Taylor, Sloan', display:'Sloan Taylor'},
+  {raw:'Tejada Almanza, Jair Jamil', display:'Jair Jamil Tejada Almanza'},
+  {raw:'Tenorio, Dani', display:'Dani Tenorio'},
+  {raw:'Terry, Katie', display:'Katie Terry'},
+  {raw:'Terry, Melissa', display:'Melissa Terry'},
+  {raw:'Terry, Zach', display:'Zach Terry'},
+  {raw:'Tew, Baylee', display:'Baylee Tew'},
+  {raw:'Tew, Brynlee', display:'Brynlee Tew'},
+  {raw:'Tew, Coleman Burton', display:'Coleman Burton Tew'},
+  {raw:'Tew, Creed', display:'Creed Tew'},
+  {raw:'Thatcher, Cole', display:'Cole Thatcher'},
+  {raw:'Thompson, Siena', display:'Siena Thompson'},
+  {raw:'Thomson, Alec Young', display:'Alec Young Thomson'},
+  {raw:'Thornton, Kendal', display:'Kendal Thornton'},
+  {raw:'Thruston, Bellami Rose', display:'Bellami Rose Thruston'},
+  {raw:'Tippets, Jared', display:'Jared Tippets'},
+  {raw:'Tolman, Layten', display:'Layten Tolman'},
+  {raw:'Toole, Abigail', display:'Abigail Toole'},
+  {raw:'Toomer, Tyler', display:'Tyler Toomer'},
+  {raw:'Torres, Matthew', display:'Matthew Torres'},
+  {raw:'Trusty, Sam', display:'Sam Trusty'},
+  {raw:'Tuttle, Cody', display:'Cody Tuttle'},
+  {raw:'Underwood, Millennia Marie', display:'Millennia Marie Underwood'},
+  {raw:'Urban, Berkeley', display:'Berkeley Urban'},
+  {raw:'Van Orden, Ellie', display:'Ellie Van Orden'},
+  {raw:'Van Ormer, Daniel', display:'Daniel Van Ormer'},
+  {raw:'Van Wagoner, Jeanne', display:'Jeanne Van Wagoner'},
+  {raw:'Van Wagoner, Mark', display:'Mark Van Wagoner'},
+  {raw:'Varner, McKell', display:'McKell Varner'},
+  {raw:'Vest, Mylee', display:'Mylee Vest'},
+  {raw:'Vilardi, Maddux', display:'Maddux Vilardi'},
+  {raw:'Visser, Isaac', display:'Isaac Visser'},
+  {raw:'Wade, Noah', display:'Noah Wade'},
+  {raw:'Waite, Brinlee', display:'Brinlee Waite'},
+  {raw:'Waldrip, Samuel Stuart', display:'Samuel Stuart Waldrip'},
+  {raw:'Wallentine, Chloe', display:'Chloe Wallentine'},
+  {raw:'Ware, Isaac Feliciano', display:'Isaac Feliciano Ware'},
+  {raw:'Ware, Kristian Jace', display:'Kristian Jace Ware'},
+  {raw:'Ware, Madison', display:'Madison Ware'},
+  {raw:'Watkins, Sarah', display:'Sarah Watkins'},
+  {raw:'Webb, Sophia', display:'Sophia Webb'},
+  {raw:'Weeks, Zane Hatch', display:'Zane Hatch Weeks'},
+  {raw:'Weimer, Emma', display:'Emma Weimer'},
+  {raw:'Welch, Jenna', display:'Jenna Welch'},
+  {raw:'Wersland, Kari', display:'Kari Wersland'},
+  {raw:'White, Eric', display:'Eric White'},
+  {raw:'White, Peyton Bryan', display:'Peyton Bryan White'},
+  {raw:'White, Seneca Zella', display:'Seneca Zella White'},
+  {raw:'Whitten, Jovie Mae', display:'Jovie Mae Whitten'},
+  {raw:'Wilford, Erin', display:'Erin Wilford'},
+  {raw:'Wilkins, Bri', display:'Bri Wilkins'},
+  {raw:'Williams, Connor', display:'Connor Williams'},
+  {raw:'Williams, Porter', display:'Porter Williams'},
+  {raw:'Wilson, Brianna', display:'Brianna Wilson'},
+  {raw:'Wood, Cristen', display:'Cristen Wood'},
+  {raw:'Wudel, Jenna', display:'Jenna Wudel'},
+  {raw:'Wyson, Jayden', display:'Jayden Wyson'},
+  {raw:'Young, Colby', display:'Colby Young'},
+  {raw:'Young, Garrett John', display:'Garrett John Young'}
+];
+
+// ── BOARD DATA ───────────────────────────────────────────────────
+
+const DEFAULT_DATA = [
+  {col:"Bishopric",cards:[
+    {n:"Graham, Randy",r:"Bishop",t:"leadership"},
+    {n:"Rockwood, Bode",r:"1st Counselor",t:"leadership"},
+    {n:"Reynolds, Parker",r:"2nd Counselor",t:"leadership"},
+    {n:"Hughes, Nathaniel",r:"Exec Secretary",t:"support"},
+    {n:"Delis, Nathan",r:"Asst Exec Sec",t:"support"},
+    {n:"Finklea, Blake Hillstead",r:"Asst Exec Sec",t:"support"},
+    {n:"Taylor, Sloan",r:"Ward Clerk",t:"support"},
+    {n:"Tait, TJ",r:"Asst Clerk",t:"support"},
+    {n:"Ware, Isaac Feliciano",r:"Asst Clerk—Mbr",t:"support"},
+    {n:"Sacolles, Ethan",r:"Asst Clerk—Fin",t:"support"},
+  ]},
+  {col:"Relief Society",cards:[
+    {n:"Hafen, Cassidy Kay",r:"President",t:"leadership"},
+    {n:"Toole, Abigail",r:"1st Counselor",t:"leadership"},
+    {n:"Olsen, Ella",r:"2nd Counselor",t:"leadership"},
+    {n:"Holman, Madeline",r:"Secretary",t:"member"},
+    {n:"Blasini, Jackie",r:"Teacher",t:"member"},
+    {n:"Landazuri, Erin Lindsay",r:"Teacher",t:"member"},
+    {n:"Ramsey, RyLee",r:"Teacher",t:"member"},
+    {n:"Andrus, Peyton",r:"Ministering Sec",t:"member"},
+    {n:"Becerra, Isabel",r:"Ministering Sec",t:"member"},
+    {n:"Porter, Kaycee",r:"Ministering Sec",t:"member"},
+    {n:"Solomon, Bailey",r:"Ministering Sec",t:"member"},
+    {n:"Gifford, Katie",r:"Activity Cmte",t:"member"},
+    {n:"Rowbury, Carmen",r:"Activity Cmte",t:"member"},
+    {n:"Stratton, Ember Shannon",r:"Service Cmte",t:"member"},
+    {n:"Allee, Ava",r:"Sacrament Bread",t:"member"},
+    {n:"Price, Jessica",r:"Sacrament Bread",t:"member"},
+    {n:"Wilson, Brianna",r:"Sacrament Bread",t:"member"},
+    {n:"",r:"Asst Secretary",t:"vacant"},
+    {n:"",r:"Music Leader",t:"vacant"},
+    {n:"",r:"Pianist",t:"vacant"},
+  ]},
+  {col:"Elders Quorum",cards:[
+    {n:"Anderson, Straton",r:"President",t:"leadership"},
+    {n:"White, Eric",r:"1st Counselor",t:"leadership"},
+    {n:"Asay, Eli",r:"2nd Counselor",t:"leadership"},
+    {n:"Hughes, Tobler",r:"Secretary",t:"member"},
+    {n:"Nissinen, Joe",r:"Asst Secretary",t:"member"},
+    {n:"Cline, Gideon",r:"Teacher",t:"member"},
+    {n:"Lambson, Luke",r:"Teacher",t:"member"},
+    {n:"Sever, Dillon",r:"Teacher",t:"member"},
+    {n:"Bezzant, Mitchell",r:"Ministering Sec",t:"member"},
+    {n:"Roberts, Grant",r:"Ministering Sec",t:"member"},
+    {n:"Griffiths, Bret",r:"Service Cmte",t:"member"},
+    {n:"",r:"Asst Secretary",t:"vacant"},
+    {n:"",r:"Activity Coord",t:"vacant"},
+    {n:"",r:"Service Coord",t:"vacant"},
+  ]},
+  {col:"Sunday School",cards:[
+    {n:"Anderson, Monson Joseph",r:"President",t:"leadership"},
+    {n:"Tait, TJ",r:"1st Counselor",t:"leadership"},
+    {n:"Harrington, Evan",r:"2nd Counselor",t:"leadership"},
+    {n:"Swindle, Devin",r:"Secretary",t:"member"},
+    {n:"Asay, Eli",r:"Teacher",t:"member"},
+    {n:"Brimhall, London",r:"Teacher",t:"member"},
+    {n:"Fry, Sophia",r:"Teacher",t:"member"},
+    {n:"Hoopes, Aubrey",r:"Teacher",t:"member"},
+    {n:"Huerta Campos, Yuritzi Yunuen",r:"Marriage Prep",t:"member"},
+    {n:"Wyson, Jayden",r:"Teacher",t:"member"},
+    {n:"",r:"Teacher",t:"vacant"},
+  ]},
+  {col:"Ward Mission",cards:[
+    {n:"Harris, JoJo",r:"Mission Co-Chair",t:"leadership"},
+    {n:"Holman, Samantha",r:"Mission Co-Chair",t:"leadership"},
+    {n:"Boddy, Tristan",r:"Ward Missionary",t:"member"},
+    {n:"DeMille, Abbey",r:"Ward Missionary",t:"member"},
+    {n:"Dené, Ashtin",r:"Ward Missionary",t:"member"},
+    {n:"Edwards, Caden Michael",r:"Ward Missionary",t:"member"},
+    {n:"Marshall, Rebekah",r:"Ward Missionary",t:"member"},
+    {n:"Urban, Berkeley",r:"Missionary",t:"member"},
+    {n:"Godfrey, Weston",r:"Missionary",t:"member"},
+    {n:"",r:"Mission Leader",t:"vacant"},
+    {n:"",r:"Ward Missionary",t:"vacant"},
+  ]},
+  {col:"Temple & Family",cards:[
+    {n:"Dray, Payton",r:"Co-Chair",t:"leadership"},
+    {n:"Chatfield, Kaylee",r:"Co-Chair",t:"leadership"},
+    {n:"Chase, Nathan Benjamin",r:"Committee",t:"member"},
+    {n:"Christensen, Haylee Nicole",r:"Committee",t:"member"},
+    {n:"Penrose, Katie",r:"Committee",t:"member"},
+    {n:"Burr, Emme",r:"Committee",t:"member"},
+    {n:"Barney, Austin",r:"Committee",t:"member"},
+    {n:"Olsen, Sara",r:"Committee",t:"member"},
+    {n:"Berrett, Addy",r:"Committee",t:"member"},
+    {n:"Barnes, Colleen",r:"Committee",t:"member"},
+    {n:"Gomez, Santiago",r:"Committee",t:"member"},
+    {n:"",r:"T&FH Leader",t:"vacant"},
+    {n:"",r:"Committee",t:"vacant"},
+  ]},
+  {col:"Welcoming",cards:[
+    {n:"Morley, Brooke",r:"Co-Chair",t:"leadership"},
+    {n:"Anderson, Josie",r:"Committee",t:"member"},
+    {n:"Terry, Melissa",r:"Committee",t:"member"},
+    {n:"Johnson, Laynee",r:"Committee",t:"member"},
+    {n:"Forsberg, Spencer",r:"Committee",t:"member"},
+    {n:"Carter, Logan Christopher",r:"Committee",t:"member"},
+    {n:"Trusty, Sam",r:"Committee",t:"member"},
+    {n:"Dopp, Kirsten",r:"Committee",t:"member"},
+    {n:"Price, Madison",r:"Committee",t:"member"},
+    {n:"",r:"Co-Chair",t:"vacant"},
+    {n:"",r:"Committee",t:"vacant"},
+  ]},
+  {col:"Munch & Mingle",cards:[
+    {n:"Ioannou, James",r:"Co-Chair",t:"leadership"},
+    {n:"Haymore, Jade",r:"Co-Chair",t:"leadership"},
+    {n:"Wells, Braxton",r:"Committee",t:"member"},
+    {n:"Green, Lissy",r:"Committee",t:"member"},
+    {n:"Owen, Emily Samantha",r:"Committee",t:"member"},
+    {n:"Baxter, Avery K",r:"Committee",t:"member"},
+    {n:"Lord, Victoria",r:"Committee",t:"member"},
+    {n:"Gammell, Cailey",r:"Committee",t:"member"},
+    {n:"",r:"Committee",t:"vacant"},
+  ]},
+  {col:"Activities",cards:[
+    {n:"Bloom, Donovan",r:"Co-Chair",t:"leadership"},
+    {n:"Cowan, McKenzi Faith",r:"Co-Chair",t:"leadership"},
+    {n:"Pendleton, Elena",r:"Committee",t:"member"},
+    {n:"Harker, Bella",r:"Committee",t:"member"},
+    {n:"Christensen, Brady",r:"Committee",t:"member"},
+    {n:"Chanthakhoun, Paula",r:"Committee",t:"member"},
+    {n:"Tamai, Kianna McKayla",r:"Committee",t:"member"},
+    {n:"Higgins, Amber",r:"Callings Coord",t:"member"},
+    {n:"",r:"Committee",t:"vacant"},
+  ]},
+  {col:"FHE",cards:[
+    {n:"Rustand, Jackson James",r:"Co-Chair",t:"leadership"},
+    {n:"Pendleton, Miriam",r:"Co-Chair",t:"leadership"},
+    {n:"Chesley, Gwendalin",r:"Co-Chair",t:"leadership"},
+    {n:"Penrod, McKay David",r:"Co-Chair",t:"leadership"},
+    {n:"Van Orden, Ellie",r:"Co-Chair",t:"leadership"},
+    {n:"Call, Ellie",r:"Committee",t:"member"},
+    {n:"Larson, Ben",r:"Committee",t:"member"},
+    {n:"",r:"Committee",t:"vacant"},
+  ]},
+  {col:"Member Visits",cards:[
+    {n:"Holm, Maci Lea",r:"Co-Chair",t:"leadership"},
+    {n:"Goodsell, Faye",r:"Co-Chair",t:"leadership"},
+    {n:"Wallentine, Chloe",r:"Co-Chair",t:"leadership"},
+    {n:"Pritchett, Christina",r:"Committee",t:"member"},
+    {n:"Anderson, James",r:"Committee",t:"member"},
+    {n:"Price, Jessica",r:"Committee",t:"member"},
+    {n:"McLaws, Miles",r:"Committee",t:"member"},
+    {n:"McClean, Katy",r:"Committee",t:"member"},
+    {n:"Olsen, Ella",r:"Committee",t:"member"},
+    {n:"Underwood, Millennia Marie",r:"Committee",t:"member"},
+    {n:"Baltazar, Saray Mercado",r:"Committee",t:"member"},
+    {n:"Clark, Isabella Nicole",r:"Committee",t:"member"},
+  ]},
+  {col:"Music",cards:[
+    {n:"Van Ormer, Daniel",r:"Coordinator",t:"leadership"},
+    {n:"Anderson, Amanda",r:"Choir Director",t:"member"},
+    {n:"Morris, Pearce",r:"Choir Director",t:"member"},
+    {n:"White, Eric",r:"Accompanist",t:"member"},
+    {n:"Crook, Kylee",r:"Chorister",t:"member"},
+    {n:"Nielsen, Victoria Ashlyn",r:"Chorister",t:"member"},
+    {n:"Barrus, Chloe",r:"Chorister",t:"member"},
+    {n:"Farias, Barbara",r:"Music Co-Chair",t:"member"},
+    {n:"Peel, Sara",r:"Music Co-Chair",t:"member"},
+    {n:"White, Eric",r:"Organist",t:"member"},
+    {n:"Duncan, Mara",r:"Organist",t:"member"},
+    {n:"",r:"Music Adviser",t:"vacant"},
+    {n:"",r:"Pianist",t:"vacant"},
+  ]},
+  {col:"Sacrament",cards:[
+    {n:"Greenlaw, Trevor",r:"Sac Mtg Coord",t:"leadership"},
+    {n:"Bowman, Nathan Craig",r:"Sac Mtg Coord",t:"leadership"},
+    {n:"Wood, Cristen",r:"Sacrament Bread",t:"member"},
+    {n:"Allee, Ava",r:"Sacrament Bread",t:"member"},
+    {n:"",r:"Sacrament Prog",t:"vacant"},
+  ]},
+  {col:"Sports",cards:[
+    {n:"Dirks, Gavin Robert",r:"Co-Chair",t:"leadership"},
+    {n:"",r:"Co-Chair",t:"vacant"},
+    {n:"",r:"Co-Chair",t:"vacant"},
+  ]},
+  {col:"Ward Prayer",cards:[
+    {n:"Welch, Jenna",r:"Co-Chair",t:"leadership"},
+    {n:"Tait, Kenzie",r:"Co-Chair",t:"leadership"},
+    {n:"Sacolles, Meeya",r:"Committee",t:"member"},
+    {n:"Buxton, Sophie",r:"Committee",t:"member"},
+    {n:"Hair, Landon Joseph",r:"Committee",t:"member"},
+    {n:"",r:"Co-Chair",t:"vacant"},
+  ]},
+  {col:"Publicity",cards:[
+    {n:"Wilson, Brianna",r:"Co-Chair",t:"leadership"},
+    {n:"",r:"Chairman",t:"vacant"},
+    {n:"",r:"Co-Chair",t:"vacant"},
+    {n:"",r:"Committee",t:"vacant"},
+  ]},
+  {col:"Nice Notes",cards:[
+    {n:"Tew, Baylee",r:"Nice Notes",t:"member"},
+    {n:"Tew, Brynlee",r:"Nice Notes",t:"member"},
+  ]},
+  {col:"Young Women",cards:[
+    {n:"",r:"President",t:"vacant"},
+    {n:"",r:"1st Counselor",t:"vacant"},
+    {n:"",r:"2nd Counselor",t:"vacant"},
+    {n:"",r:"Secretary",t:"vacant"},
+    {n:"",r:"Specialist",t:"vacant"},
+  ]},
+  {col:"Primary",cards:[
+    {n:"",r:"President",t:"vacant"},
+    {n:"",r:"1st Counselor",t:"vacant"},
+    {n:"",r:"2nd Counselor",t:"vacant"},
+    {n:"",r:"Secretary",t:"vacant"},
+  ]},
+];
+
+// ── STATE ────────────────────────────────────────────────────────
+let boardData = [];
+let dashData = {sustaining:[],releasing:[],setapart:[],meetwith:[]};
+let historyData = []; // array of {weekLabel, date, sustaining:[], releasing:[], setapart:[], meetwith:[]}
+let recentlyReleased = [];
+let activeFilter = 'all';
+let pendingColIdx = null;
+let ctxCardEl = null;
+let editCardEl = null;
+const selectedMembers = {};
+
+// ── UTILS ────────────────────────────────────────────────────────
+function fmt(raw) {
+  if (!raw) return 'Vacant';
+  const p = raw.split(',');
+  return p.length === 2 ? p[1].trim() + ' ' + p[0].trim() : raw;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── STATE ─────────────────────────────────────────────────────────
+// ── UTILS ─────────────────────────────────────────────────────────
+function fmt(raw) {
+  if (!raw) return 'Vacant';
+  const p = raw.split(',');
+  return p.length === 2 ? p[1].trim() + ' ' + p[0].trim() : raw;
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+function daysSince(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  return Math.floor((Date.now() - d) / 86400000);
+}
+function yearsSince(dateStr) {
+  const d = daysSince(dateStr);
+  return d === null ? null : d / 365.25;
+}
+
+// ── FIREBASE SETUP ────────────────────────────────────────────────
+const firebaseConfig = {
+  apiKey: "AIzaSyBuc2e90FUkQSdn1A6HB2EKCG8hptwbJAw",
+  authDomain: "ysa-ward-org-chart.firebaseapp.com",
+  databaseURL: "https://ysa-ward-org-chart-default-rtdb.firebaseio.com",
+  projectId: "ysa-ward-org-chart",
+  storageBucket: "ysa-ward-org-chart.firebasestorage.app",
+  messagingSenderId: "628177691799",
+  appId: "1:628177691799:web:90e0d17091f979a057f5d2"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const wardRef = db.ref('ward');
+
+let isSyncing = false;
+let saveTimeout = null;
+
+function setSyncStatus(status, msg) {
+  const el = document.getElementById('syncIndicator');
+  if (!el) return;
+  el.className = 'sync-indicator ' + status;
+  el.textContent = '⬤ ' + msg;
+}
+
+// ── STORAGE (Firebase) ────────────────────────────────────────────
+function loadData() {
+  // Load from localStorage as immediate fallback while Firebase connects
+  try {
+    const b = localStorage.getItem('wardBoardData');
+    const d = localStorage.getItem('wardDashData');
+    const h = localStorage.getItem('wardHistoryData');
+    const r = localStorage.getItem('wardRecentlyReleased');
+    if (b) boardData = JSON.parse(b);
+    else boardData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    if (d) dashData = JSON.parse(d);
+    if (h) historyData = JSON.parse(h);
+    if (r) recentlyReleased = JSON.parse(r);
+  } catch(e) {
+    boardData = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+
+  setSyncStatus('saving', 'connecting...');
+
+  // Listen for live updates from Firebase
+  wardRef.on('value', snapshot => {
+    const data = snapshot.val();
+    if (data) {
+      // Only update if a remote change came in (not our own push)
+      if (!isSyncing) {
+        if (data.boardData) boardData = data.boardData;
+        if (data.dashData) dashData = data.dashData;
+        if (data.historyData) historyData = data.historyData;
+        if (data.recentlyReleased) recentlyReleased = data.recentlyReleased;
+        // Cache locally too
+        try {
+          localStorage.setItem('wardBoardData', JSON.stringify(boardData));
+          localStorage.setItem('wardDashData', JSON.stringify(dashData));
+          localStorage.setItem('wardHistoryData', JSON.stringify(historyData));
+          localStorage.setItem('wardRecentlyReleased', JSON.stringify(recentlyReleased));
+        } catch(e) {}
+        renderBoard();
+        renderDash();
+        renderHistory();
+        // Re-render stats if on that page
+        if (document.getElementById('page-stats').classList.contains('active')) renderStatsPage();
+      }
+    } else {
+      // No data in Firebase yet — push our local defaults
+      pushToFirebase();
+    }
+    setSyncStatus('synced', 'synced');
+  }, err => {
+    setSyncStatus('error', 'offline');
+    console.warn('Firebase error:', err);
+  });
+}
+
+function saveToStorage() {
+  syncDataFromDOM();
+  // Save to localStorage immediately
+  try {
+    localStorage.setItem('wardBoardData', JSON.stringify(boardData));
+    localStorage.setItem('wardDashData', JSON.stringify(dashData));
+    localStorage.setItem('wardHistoryData', JSON.stringify(historyData));
+    localStorage.setItem('wardRecentlyReleased', JSON.stringify(recentlyReleased));
+  } catch(e) {}
+  // Debounce Firebase push by 800ms to avoid hammering on drag
+  setSyncStatus('saving', 'saving...');
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(pushToFirebase, 800);
+}
+
+function pushToFirebase() {
+  isSyncing = true;
+  wardRef.set({
+    boardData,
+    dashData,
+    historyData,
+    recentlyReleased,
+    lastUpdated: new Date().toISOString()
+  }).then(() => {
+    setSyncStatus('synced', 'synced');
+    showToast('Saved & synced');
+  }).catch(err => {
+    setSyncStatus('error', 'sync failed');
+    showToast('Sync failed — saved locally');
+    console.warn('Firebase push error:', err);
+  }).finally(() => {
+    isSyncing = false;
+  });
+}
+
+// ── PAGE NAV ──────────────────────────────────────────────────────
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'stats') renderStatsPage();
+  if (id === 'history') renderHistory(); if (id === 'stats') renderStatsPage();
+  if (id === 'history') renderHistory();
+}
+
+// ── KEYBOARD SHORTCUTS ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'n' || e.key === 'N') {
+    const tag = document.activeElement.tagName;
+    const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || document.activeElement.isContentEditable;
+    if (isTyping) return;
+    if (document.querySelectorAll('.modal-bg.open').length) return;
+    const searchEl = document.getElementById('search');
+    e.preventDefault();
+    showPage('board', document.querySelectorAll('.nav-tab')[0]);
+    searchEl.focus(); searchEl.select();
+  }
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-bg,.ctx-menu').forEach(el => el.classList.remove('open'));
+    document.querySelectorAll('.member-dropdown').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// ── MEMBER SEARCH DROPDOWN ────────────────────────────────────────
+function filterMembers(context) {
+  let inputEl;
+  if (context === 'modal') inputEl = document.getElementById('modalMemberSearch');
+  else if (context === 'editmodal') inputEl = document.getElementById('editMemberSearch');
+  else inputEl = document.getElementById('input-' + context);
+  const dropEl = document.getElementById('drop-' + context);
+  if (!inputEl || !dropEl) return;
+  const q = inputEl.value.toLowerCase().trim();
+  if (!q) { dropEl.classList.remove('open'); return; }
+  const matches = MEMBERS.filter(m =>
+    m.display.toLowerCase().includes(q) || m.raw.toLowerCase().includes(q)
+  ).slice(0, 12);
+  if (!matches.length) { dropEl.classList.remove('open'); return; }
+  const rect = inputEl.getBoundingClientRect();
+  dropEl.style.top = (rect.bottom + 2) + 'px';
+  dropEl.style.left = rect.left + 'px';
+  dropEl.style.width = rect.width + 'px';
+  dropEl.innerHTML = matches.map(m => {
+    const d = m.display.toLowerCase();
+    const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
+    const hiD = m.display.replace(re, '<mark>$1</mark>');
+    const hiR = m.raw.replace(re, '<mark>$1</mark>');
+    const opt = document.createElement('div');
+    opt.className = 'member-opt';
+    opt.dataset.raw = m.raw;
+    opt.dataset.display = m.display;
+    opt.dataset.ctx = context;
+    opt.innerHTML = '<strong>' + hiD + '</strong><span style="color:var(--muted);font-size:10px;margin-left:6px">' + hiR + '</span>';
+    opt.addEventListener('mousedown', function() { selectMember(this.dataset.ctx, this.dataset.raw, this.dataset.display); });
+    return opt.outerHTML;
+  }).join('');
+  dropEl.classList.add('open');
+}
+function selectMember(context, raw, display) {
+  selectedMembers[context] = raw;
+  let inputEl, hiddenEl;
+  if (context === 'modal') { inputEl = document.getElementById('modalMemberSearch'); hiddenEl = document.getElementById('modalMemberRaw'); }
+  else if (context === 'editmodal') { inputEl = document.getElementById('editMemberSearch'); hiddenEl = document.getElementById('editMemberRaw'); }
+  else inputEl = document.getElementById('input-' + context);
+  const dropEl = document.getElementById('drop-' + context);
+  if (inputEl) inputEl.value = display;
+  if (hiddenEl) hiddenEl.value = raw;
+  if (dropEl) dropEl.classList.remove('open');
+}
+
+// ── STATS BAR ─────────────────────────────────────────────────────
+function updateStats() {
+  let filled = 0, vacant = 0;
+  boardData.forEach(col => col.cards.forEach(c => (!c.n || c.t==='vacant') ? vacant++ : filled++));
+  const total = filled + vacant;
+  const pct = total ? Math.round(filled/total*100) : 0;
+  let longServing = 0;
+  boardData.forEach(col => col.cards.forEach(c => {
+    if (c.n && c.sustainedDate && yearsSince(c.sustainedDate) >= 2) longServing++;
+  }));
+  const alertHtml = longServing > 0
+    ? '<span class="stat-alert" onclick="jumpToLongServing()" title="Click to filter">' + longServing + ' long-serving</span>'
+    : '';
+  document.getElementById('statsBar').innerHTML =
+    '<div class="stat-item"><span class="stat-n">' + boardData.length + '</span><span class="stat-l">Orgs</span></div>' +
+    '<div class="stat-sep">·</div>' +
+    '<div class="stat-item"><span class="stat-n">' + total + '</span><span class="stat-l">Callings</span></div>' +
+    '<div class="stat-sep">·</div>' +
+    '<div class="stat-item"><span class="stat-n">' + filled + '</span><span class="stat-l">Filled</span></div>' +
+    '<div class="stat-sep">·</div>' +
+    '<div class="stat-item"><span class="stat-n">' + vacant + '</span><span class="stat-l">Vacant</span></div>' +
+    '<div class="stat-sep">·</div>' +
+    '<div class="stat-item"><span class="stat-n">' + pct + '%</span><span class="stat-l">Fill Rate</span></div>' +
+    alertHtml;
+}
+function jumpToLongServing() {
+  showPage('board', document.querySelectorAll('.nav-tab')[0]);
+  setFilter('longserving', document.querySelectorAll('.filter-pill')[4]);
+}
+
+// ── BOARD RENDER ──────────────────────────────────────────────────
+function sinkVacants(cardsEl) {
+  const addBtn = cardsEl.querySelector('.add-card-btn');
+  [...cardsEl.querySelectorAll('.card[data-vacant="1"]')].forEach(v => cardsEl.insertBefore(v, addBtn));
+}
+function getDropTarget(cardsEl, clientY) {
+  const cards = [...cardsEl.querySelectorAll('.card:not(.dragging):not([data-vacant="1"])')];
+  for (const card of cards) {
+    const rect = card.getBoundingClientRect();
+    if (clientY < rect.top + rect.height / 2) return card;
+  }
+  return null;
+}
+function makeCardEl(cardData) {
+  const isVacant = !cardData.n || cardData.t === 'vacant';
+  const div = document.createElement('div');
+  div.className = 'card ' + (isVacant ? 'vacant' : cardData.t);
+  div.draggable = !isVacant;
+  div.dataset.name = (cardData.n || '').toLowerCase();
+  div.dataset.vacant = isVacant ? '1' : '0';
+  div.dataset.type = cardData.t;
+  div.dataset.raw = cardData.n || '';
+  if (cardData.sustainedDate) div.dataset.sustainedDate = cardData.sustainedDate;
+  if (cardData.notes) div.dataset.notes = cardData.notes;
+  const yrs = yearsSince(cardData.sustainedDate);
+  const isLong = yrs !== null && yrs >= 2;
+  const yrLabel = yrs !== null ? (yrs >= 1 ? Math.floor(yrs) + 'y' : Math.round(yrs*12) + 'mo') : '';
+  div.innerHTML =
+    '<div class="card-name">' + fmt(cardData.n) + '</div>' +
+    '<div class="card-role">' + (cardData.r||'') + '</div>' +
+    (yrLabel ? '<div class="card-meta"><span class="' + (isLong?'card-duration-warn':'') + '">' + yrLabel + '</span></div>' : '') +
+    (cardData.notes ? '<div class="card-note">' + cardData.notes + '</div>' : '');
+  if (!isVacant) {
+    div.addEventListener('dragstart', e => {
+      window._dragCard = div;
+      setTimeout(() => div.classList.add('dragging'), 0);
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    div.addEventListener('dragend', () => {
+      div.classList.remove('dragging');
+      document.querySelectorAll('.col-cards').forEach(c => {
+        c.classList.remove('drag-over');
+        c.querySelectorAll('.card').forEach(c2 => c2.classList.remove('drop-hint-above'));
+      });
+      document.querySelectorAll('.col-cards').forEach(sinkVacants);
+      syncDataFromDOM(); updateStats(); saveToStorage();
+    });
+  }
+  div.addEventListener('contextmenu', e => {
+    e.preventDefault();
+    ctxCardEl = div;
+    const menu = document.getElementById('ctxMenu');
+    menu.style.left = Math.min(e.clientX, window.innerWidth - 160) + 'px';
+    menu.style.top = Math.min(e.clientY, window.innerHeight - 220) + 'px';
+    menu.classList.add('open');
+  });
+  return div;
+}
+function makeColEl(colData, colIdx) {
+  const filled = colData.cards.filter(c => c.n && c.t !== 'vacant').length;
+  const vacant = colData.cards.filter(c => !c.n || c.t === 'vacant').length;
+  const col = document.createElement('div');
+  col.className = 'column'; col.dataset.col = colIdx;
+  col.innerHTML = '<div class="col-header">' + colData.col + '</div>' +
+    '<div class="col-counts">' +
+    '<span class="count-pill count-filled">' + filled + ' filled</span>' +
+    (vacant > 0 ? '<span class="count-pill count-vacant">' + vacant + ' open</span>' : '') +
+    '</div>';
+  const cards = document.createElement('div');
+  cards.className = 'col-cards'; cards.dataset.col = colIdx;
+  const filledCards = colData.cards.filter(c => c.n && c.t !== 'vacant');
+  const vacantCards = colData.cards.filter(c => !c.n || c.t === 'vacant');
+  [...filledCards, ...vacantCards].forEach(c => cards.appendChild(makeCardEl(c)));
+  const addBtn = document.createElement('button');
+  addBtn.className = 'add-card-btn'; addBtn.textContent = '+ add calling';
+  addBtn.onclick = () => openAddCard(colIdx);
+  cards.appendChild(addBtn);
+  cards.addEventListener('dragover', e => {
+    e.preventDefault(); cards.classList.add('drag-over');
+    const target = getDropTarget(cards, e.clientY);
+    cards.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
+    if (target) target.classList.add('drop-hint-above');
+  });
+  cards.addEventListener('dragleave', e => {
+    if (!cards.contains(e.relatedTarget)) {
+      cards.classList.remove('drag-over');
+      cards.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
+    }
+  });
+  cards.addEventListener('drop', e => {
+    e.preventDefault();
+    cards.classList.remove('drag-over');
+    cards.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
+    const dc = window._dragCard;
+    if (!dc) return;
+    const target = getDropTarget(cards, e.clientY);
+    const firstVacant = cards.querySelector('.card[data-vacant="1"]');
+    cards.insertBefore(dc, target || firstVacant || addBtn);
+  });
+  col.appendChild(cards);
+  return col;
+}
+function renderBoard() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  boardData.forEach((col, ci) => board.appendChild(makeColEl(col, ci)));
+  const addColBtn = document.createElement('button');
+  addColBtn.className = 'add-col-btn'; addColBtn.textContent = '+ add organization';
+  addColBtn.onclick = openAddCol;
+  board.appendChild(addColBtn);
+  updateStats(); applyFilter();
+}
+function syncDataFromDOM() {
+  document.querySelectorAll('.column').forEach((colEl, ci) => {
+    if (!boardData[ci]) return;
+    const newCards = [];
+    colEl.querySelectorAll('.card').forEach(cardEl => {
+      newCards.push({
+        n: cardEl.dataset.raw || '',
+        r: cardEl.querySelector('.card-role').textContent,
+        t: (cardEl.dataset.raw ? cardEl.dataset.type : 'vacant') || 'vacant',
+        sustainedDate: cardEl.dataset.sustainedDate || '',
+        notes: cardEl.dataset.notes || ''
+      });
+    });
+    boardData[ci].cards = newCards;
+  });
+}
+
+// ── FILTER ────────────────────────────────────────────────────────
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  applyFilter();
+}
+function applyFilter() {
+  const q = document.getElementById('search').value.toLowerCase();
+  document.querySelectorAll('.card').forEach(card => {
+    const roleEl = card.querySelector('.card-role');
+    const nameMatch = !q || card.dataset.name.includes(q) || (roleEl && roleEl.textContent.toLowerCase().includes(q));
+    const isVacant = card.dataset.vacant === '1';
+    const isLeader = card.dataset.type === 'leadership';
+    const isLong = card.dataset.sustainedDate && yearsSince(card.dataset.sustainedDate) >= 2;
+    let show = true;
+    if (activeFilter === 'filled' && isVacant) show = false;
+    if (activeFilter === 'vacant' && !isVacant) show = false;
+    if (activeFilter === 'leadership' && !isLeader) show = false;
+    if (activeFilter === 'longserving' && !isLong) show = false;
+    if (q) {
+      card.classList.toggle('highlight', nameMatch && show);
+      card.classList.toggle('dim', !nameMatch || !show);
+      card.style.display = '';
+    } else {
+      card.classList.remove('highlight','dim');
+      card.style.display = show ? '' : 'none';
+    }
+  });
+}
+function handleSearch() { applyFilter(); }
+
+// ── ADD CARD ──────────────────────────────────────────────────────
+function openAddCard(colIdx) {
+  pendingColIdx = colIdx;
+  document.getElementById('addCardTitle').textContent = 'Add Calling — ' + boardData[colIdx].col;
+  ['modalMemberSearch','modalMemberRaw','newCardRole','newCardDate','newCardNotes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('newCardType').value = 'member';
+  selectedMembers['modal'] = '';
+  document.getElementById('addCardModal').classList.add('open');
+  setTimeout(() => document.getElementById('modalMemberSearch').focus(), 50);
+}
+function confirmAddCard() {
+  const raw = document.getElementById('modalMemberRaw').value || document.getElementById('modalMemberSearch').value.trim();
+  const role = document.getElementById('newCardRole').value.trim();
+  const type = document.getElementById('newCardType').value;
+  const sustainedDate = document.getElementById('newCardDate').value;
+  const notes = document.getElementById('newCardNotes').value.trim();
+  if (!role) { showToast('Please enter a calling/role'); return; }
+  boardData[pendingColIdx].cards.push({n:raw, r:role, t:raw?type:'vacant', sustainedDate, notes});
+  closeModal('addCardModal'); renderBoard(); saveToStorage();
+}
+
+// ── ADD COL ───────────────────────────────────────────────────────
+function openAddCol() {
+  document.getElementById('newColName').value = '';
+  document.getElementById('addColModal').classList.add('open');
+  setTimeout(() => document.getElementById('newColName').focus(), 50);
+}
+function confirmAddCol() {
+  const name = document.getElementById('newColName').value.trim();
+  if (!name) return;
+  boardData.push({col:name, cards:[]});
+  closeModal('addColModal'); renderBoard(); saveToStorage();
+}
+
+// ── EDIT CARD ─────────────────────────────────────────────────────
+function openEditCard(cardEl) {
+  editCardEl = cardEl;
+  const raw = cardEl.dataset.raw || '';
+  document.getElementById('editMemberSearch').value = raw ? fmt(raw) : '';
+  document.getElementById('editMemberRaw').value = raw;
+  document.getElementById('editCardRole').value = cardEl.querySelector('.card-role').textContent;
+  document.getElementById('editCardType').value = cardEl.dataset.type || 'member';
+  document.getElementById('editCardDate').value = cardEl.dataset.sustainedDate || '';
+  document.getElementById('editCardNotes').value = cardEl.dataset.notes || '';
+  document.getElementById('editCardModal').classList.add('open');
+  setTimeout(() => document.getElementById('editMemberSearch').focus(), 50);
+}
+function confirmEditCard() {
+  const raw = document.getElementById('editMemberRaw').value || document.getElementById('editMemberSearch').value.trim();
+  const role = document.getElementById('editCardRole').value.trim();
+  const type = document.getElementById('editCardType').value;
+  const sustainedDate = document.getElementById('editCardDate').value;
+  const notes = document.getElementById('editCardNotes').value.trim();
+  if (!editCardEl) return;
+  const finalType = raw ? type : 'vacant';
+  editCardEl.dataset.type = finalType; editCardEl.dataset.name = raw.toLowerCase();
+  editCardEl.dataset.vacant = raw ? '0' : '1'; editCardEl.dataset.raw = raw;
+  editCardEl.dataset.sustainedDate = sustainedDate; editCardEl.dataset.notes = notes;
+  editCardEl.className = 'card ' + finalType; editCardEl.draggable = !!raw;
+  const yrs = yearsSince(sustainedDate);
+  const isLong = yrs !== null && yrs >= 2;
+  const yrLabel = yrs !== null ? (yrs >= 1 ? Math.floor(yrs) + 'y' : Math.round(yrs*12) + 'mo') : '';
+  editCardEl.innerHTML =
+    '<div class="card-name">' + fmt(raw) + '</div>' +
+    '<div class="card-role">' + role + '</div>' +
+    (yrLabel ? '<div class="card-meta"><span class="' + (isLong?'card-duration-warn':'') + '">' + yrLabel + '</span></div>' : '') +
+    (notes ? '<div class="card-note">' + notes + '</div>' : '');
+  closeModal('editCardModal'); syncDataFromDOM(); updateStats(); saveToStorage();
+}
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+// ── CONTEXT MENU ──────────────────────────────────────────────────
+function ctxEdit() { document.getElementById('ctxMenu').classList.remove('open'); if (ctxCardEl) openEditCard(ctxCardEl); }
+function ctxMarkVacant() {
+  document.getElementById('ctxMenu').classList.remove('open');
+  if (!ctxCardEl) return;
+  const raw = ctxCardEl.dataset.raw || '';
+  const role = ctxCardEl.querySelector('.card-role').textContent;
+  let org = '';
+  const colEl = ctxCardEl.closest('.column');
+  if (colEl) { const ci = parseInt(colEl.dataset.col); if (boardData[ci]) org = boardData[ci].col; }
+  if (raw) {
+    recentlyReleased.unshift({name:raw, role, org, date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})});
+    recentlyReleased = recentlyReleased.slice(0, 30);
+  }
+  ctxCardEl.innerHTML = '<div class="card-name">Vacant</div><div class="card-role">' + role + '</div>';
+  ctxCardEl.className = 'card vacant'; ctxCardEl.draggable = false;
+  ctxCardEl.dataset.type = 'vacant'; ctxCardEl.dataset.vacant = '1';
+  ctxCardEl.dataset.name = ''; ctxCardEl.dataset.raw = '';
+  ctxCardEl.dataset.sustainedDate = ''; ctxCardEl.dataset.notes = '';
+  sinkVacants(ctxCardEl.parentNode); syncDataFromDOM(); updateStats(); saveToStorage();
+}
+function ctxDelete() {
+  document.getElementById('ctxMenu').classList.remove('open');
+  if (!ctxCardEl) return;
+  ctxCardEl.remove(); syncDataFromDOM(); updateStats(); saveToStorage();
+}
+function ctxSendTo(section) {
+  document.getElementById('ctxMenu').classList.remove('open');
+  if (!ctxCardEl) return;
+  const raw = ctxCardEl.dataset.raw || '';
+  const role = ctxCardEl.querySelector('.card-role').textContent;
+  let org = '';
+  const colEl = ctxCardEl.closest('.column');
+  if (colEl) { const ci = parseInt(colEl.dataset.col); if (boardData[ci]) org = boardData[ci].col; }
+  dashData[section].push({name:raw||'Unknown', role, org, done:false, doneDate:null});
+  renderDash();
+  showPage('dashboard', document.querySelectorAll('.nav-tab')[1]);
+  showToast('Added to ' + section);
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────
+const DASH_SECTIONS = ['sustaining','releasing','setapart','meetwith'];
+const SECTION_LABELS = {sustaining:'Sustaining',releasing:'Releasing',setapart:'Setting Apart',meetwith:'Meet With'};
+
+function renderDash() {
+  DASH_SECTIONS.forEach(sec => {
+    const list = document.getElementById('list-' + sec);
+    const badge = document.getElementById('badge-' + sec);
+    const items = dashData[sec] || [];
+    badge.textContent = items.filter(i => !i.done).length;
+    if (!items.length) { list.innerHTML = '<div class="dash-empty">None yet</div>'; return; }
+    list.innerHTML = '';
+    items.forEach((item, i) => {
+      const row = document.createElement('div');
+      row.className = 'dash-item' + (item.done ? ' done' : '');
+      const doneStr = item.done && item.doneDate
+        ? ' <span style="color:#2d7a52;font-size:10px">· done ' + item.doneDate + '</span>' : '';
+      row.innerHTML =
+        '<button class="dash-check" title="' + (item.done ? 'Mark pending' : 'Mark done') + '">✓</button>' +
+        '<div style="flex:1">' +
+          '<div class="dash-item-name">' + fmt(item.name) + '</div>' +
+          '<div class="dash-item-org">' + (item.role||'') + (item.org ? ' · ' + item.org : '') + doneStr + '</div>' +
+        '</div>' +
+        '<button class="dash-item-del" title="Remove">×</button>';
+      row.querySelector('.dash-check').addEventListener('click', () => toggleDone(sec, i));
+      row.querySelector('.dash-item-del').addEventListener('click', () => removeDashItem(sec, i));
+      list.appendChild(row);
+    });
+  });
+  generateProgram();
+}
+function toggleDone(sec, idx) {
+  const item = dashData[sec][idx];
+  item.done = !item.done;
+  item.doneDate = item.done ? new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}) : null;
+  renderDash(); saveToStorage();
+  const allItems = DASH_SECTIONS.flatMap(s => dashData[s]);
+  if (allItems.length > 0 && allItems.every(i => i.done)) {
+    setTimeout(() => { if (confirm('All items are done! Archive this week to history?')) archiveCurrentWeek(true); }, 200);
+  }
+}
+function addDashItem(sec) {
+  const raw = selectedMembers[sec] || document.getElementById('input-' + sec).value.trim();
+  const role = document.getElementById('role-' + sec).value.trim();
+  if (!raw) { showToast('Select a member first'); return; }
+  dashData[sec].push({name:raw, role, org:'', done:false, doneDate:null});
+  document.getElementById('input-' + sec).value = '';
+  document.getElementById('role-' + sec).value = '';
+  selectedMembers[sec] = '';
+  document.getElementById('drop-' + sec).classList.remove('open');
+  renderDash(); saveToStorage();
+}
+function removeDashItem(sec, idx) { dashData[sec].splice(idx, 1); renderDash(); saveToStorage(); }
+
+// ── SACRAMENT PROGRAM GENERATOR ───────────────────────────────────
+function generateProgram() {
+  const sustainings = dashData.sustaining || [];
+  const releasings = dashData.releasing || [];
+  if (!sustainings.length && !releasings.length) {
+    document.getElementById('programText').textContent = 'Add sustainings and releasings above to generate the announcement text.';
+    return;
+  }
+  let text = '';
+  if (releasings.length) {
+    text += 'The following have been released and we express appreciation for their service:\n\n';
+    releasings.forEach(item => {
+      text += '  ' + fmt(item.name) + (item.role ? ' as ' + item.role : '') + (item.org ? ' in the ' + item.org : '') + '.\n';
+    });
+    text += '\nAll those who wish to express thanks for their service, please do so by the uplifted hand.\n\n';
+  }
+  if (sustainings.length) {
+    text += 'The following have been called to serve and will be presented for a sustaining vote:\n\n';
+    sustainings.forEach(item => {
+      text += '  ' + fmt(item.name) + (item.role ? ' as ' + item.role : '') + (item.org ? ' in the ' + item.org : '') + '.\n';
+    });
+    text += '\nAll those in favor, please manifest it by the uplifted hand. Any opposed by the same sign.';
+  }
+  document.getElementById('programText').textContent = text.trim();
+}
+function copyProgram() {
+  const text = document.getElementById('programText').textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard')).catch(() => showToast('Copy failed'));
+}
+
+// ── STATS PAGE ─────────────────────────────────────────────────────
+function renderStatsPage() {
+  const el = document.getElementById('statsPageContent');
+  if (!el) return;
+
+  // Tally numbers
+  let totalFilled = 0, totalVacant = 0;
+  const orgRows = [];
+  const withCallings = new Set();
+  (boardData || []).forEach(col => {
+    const cards = col.cards || [];
+    const filled = cards.filter(c => c.n && c.t !== 'vacant').length;
+    const vacant = cards.filter(c => !c.n || c.t === 'vacant').length;
+    totalFilled += filled; totalVacant += vacant;
+    const total = filled + vacant;
+    orgRows.push({name: col.col, filled, vacant, total, pct: total ? Math.round(filled/total*100) : 0});
+    cards.forEach(c => { if (c.n && c.t !== 'vacant') withCallings.add(c.n); });
+  });
+  orgRows.sort((a,b) => b.vacant - a.vacant);
+
+  const memberCount = MEMBERS.length;
+  const pctWith = memberCount ? Math.round(withCallings.size / memberCount * 100) : 0;
+  const fillRate = (totalFilled + totalVacant) ? Math.round(totalFilled / (totalFilled + totalVacant) * 100) : 0;
+
+  // Build stats cards
+  const makeStatCard = (n, label, sub) =>
+    '<div class="stat-card"><div class="stat-card-n">' + n + '</div>' +
+    '<div class="stat-card-l">' + label + '</div>' +
+    '<div class="stat-card-sub">' + sub + '</div></div>';
+
+  const statsTop =
+    '<div class="stats-top">' +
+    makeStatCard(memberCount, 'Ward Members', withCallings.size + ' with callings (' + pctWith + '%)') +
+    makeStatCard(totalFilled, 'Filled Callings', 'of ' + (totalFilled + totalVacant) + ' total') +
+    makeStatCard(totalVacant, 'Open Callings', 'across ' + (boardData||[]).length + ' organizations') +
+    makeStatCard(fillRate + '%', 'Fill Rate', (historyData||[]).length + ' weeks archived') +
+    '</div>';
+
+  // Build org table
+  const tableRows = orgRows.map(r => {
+    const vacCol = r.vacant > 0 ? 'color:#c0392b;font-weight:600' : 'color:#888';
+    const barClass = r.pct < 50 ? 'fill-bar warn' : 'fill-bar';
+    return '<div class="orgs-table-row">' +
+      '<span style="font-weight:500">' + r.name + '</span>' +
+      '<span style="color:#2d7a52;font-weight:500">' + r.filled + '</span>' +
+      '<span style="' + vacCol + '">' + r.vacant + '</span>' +
+      '<div><div class="fill-bar-wrap"><div class="' + barClass + '" style="width:' + r.pct + '%"></div></div>' +
+      '<div style="font-size:10px;color:var(--muted);margin-top:2px;font-family:DM Mono,monospace">' + r.pct + '%</div></div>' +
+      '</div>';
+  }).join('');
+
+  const orgsTable =
+    '<div class="orgs-table">' +
+    '<div class="orgs-table-header"><span>Organization</span><span>Filled</span><span>Vacant</span><span>Fill Rate</span></div>' +
+    tableRows + '</div>';
+
+  // Recently released
+  const rr = recentlyReleased || [];
+  const rrRows = rr.length
+    ? rr.slice(0, 15).map(r =>
+        '<div class="rr-item">' +
+        '<div class="rr-name">' + fmt(r.name) + '</div>' +
+        '<div class="rr-meta">' + (r.role || '') + (r.org ? ' · ' + r.org : '') +
+        ' <span style="margin-left:6px;color:#aaa">' + (r.date || '') + '</span></div>' +
+        '</div>').join('')
+    : '<div style="padding:.75rem 1rem;font-size:12px;color:#bbb;font-style:italic;font-family:DM Mono,monospace">No releases recorded yet</div>';
+
+  const rrSection = '<div class="recently-released"><div class="rr-header">Recently Released</div>' + rrRows + '</div>';
+
+  el.innerHTML = statsTop + orgsTable + rrSection;
+}
+
+// ── HISTORY ───────────────────────────────────────────────────────
+function getWeekLabel() {
+  const d = new Date();
+  const sunday = new Date(d);
+  sunday.setDate(d.getDate() - d.getDay());
+  return sunday.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function archiveCurrentWeek(silent) {
+  const hasSomething = DASH_SECTIONS.some(s => dashData[s].length > 0);
+  if (!hasSomething) { if (!silent) showToast('Nothing to archive'); return; }
+  const weekLabel = getWeekLabel();
+  const existing = historyData.findIndex(w => w.weekLabel === weekLabel);
+  const snapshot = {};
+  DASH_SECTIONS.forEach(s => { snapshot[s] = JSON.parse(JSON.stringify(dashData[s])); });
+  const entry = Object.assign({weekLabel, date:new Date().toISOString()}, snapshot);
+  if (existing >= 0) historyData[existing] = entry;
+  else historyData.unshift(entry);
+  DASH_SECTIONS.forEach(s => { dashData[s] = dashData[s].filter(i => !i.done); });
+  saveToStorage(); renderDash(); renderHistory();
+  showToast('Week archived');
+}
+function renderHistory() {
+  const sel = document.getElementById('historyWeekFilter');
+  const content = document.getElementById('historyContent');
+  sel.innerHTML = historyData.length
+    ? historyData.map((w,i) => '<option value="' + i + '">' + w.weekLabel + '</option>').join('')
+    : '<option value="">No history yet</option>';
+  if (!historyData.length) {
+    content.innerHTML = '<div style="text-align:center;padding:3rem;font-family:DM Mono,monospace;font-size:12px;color:var(--muted)">No history yet. Archive the dashboard to save a weekly snapshot.</div>';
+    return;
+  }
+  const idx = parseInt(sel.value) || 0;
+  const week = historyData[idx];
+  if (!week) return;
+  const secs = [
+    {key:'sustaining',label:'Sustainings',cls:'s'},
+    {key:'releasing', label:'Releasings', cls:'r'},
+    {key:'setapart',  label:'Setting Apart',cls:'p'},
+    {key:'meetwith',  label:'Met With',   cls:'m'},
+  ];
+  const pills = secs.map(sc => {
+    const count = (week[sc.key]||[]).length;
+    return count ? '<span class="hist-pill ' + sc.cls + '">' + count + ' ' + sc.label.toLowerCase() + '</span>' : '';
+  }).join('');
+  const sections = secs.map(sc => {
+    const items = week[sc.key] || [];
+    const entries = items.length
+      ? items.map(item =>
+          '<div class="hist-entry">' +
+          (item.done ? '<span style="color:#2d7a52;margin-right:3px">\u2713</span>' : '<span style="color:#ccc;margin-right:3px">\u25cb</span>') +
+          '<div><span class="hist-entry-name">' + fmt(item.name) + '</span>' +
+          (item.role ? '<span class="hist-entry-role"> &mdash; ' + item.role + '</span>' : '') +
+          (item.org  ? '<span class="hist-entry-role"> &middot; ' + item.org + '</span>' : '') +
+          '</div></div>').join('')
+      : '<div class="hist-empty">None</div>';
+    return '<div class="hist-section ' + sc.cls + '"><div class="hist-section-title">' + sc.label + '</div>' + entries + '</div>';
+  }).join('');
+  content.innerHTML =
+    '<div class="hist-week">' +
+      '<div class="hist-week-header">' +
+        '<span class="hist-week-label">Week of ' + week.weekLabel + '</span>' +
+        '<div class="hist-week-pills">' + (pills||'<span style="font-size:11px;color:#6a6050">empty</span>') + '</div>' +
+        '<button class="btn sm" style="margin-left:12px" onclick="deleteHistoryWeek(' + idx + ')">Delete</button>' +
+      '</div>' +
+      '<div class="hist-sections">' + sections + '</div>' +
+    '</div>';
+}
+function deleteHistoryWeek(idx) { historyData.splice(idx,1); saveToStorage(); renderHistory(); }
+function exportHistoryCSV() {
+  if (!historyData.length) { showToast('No history to export'); return; }
+  const rows = [['Week','Section','Name','Role','Organization','Completed']];
+  historyData.forEach(week => {
+    DASH_SECTIONS.forEach(sec => {
+      (week[sec]||[]).forEach(item => {
+        rows.push([week.weekLabel,SECTION_LABELS[sec],fmt(item.name),item.role||'',item.org||'',item.done?'Yes':'No']);
+      });
+    });
+  });
+  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'ward_history.csv'; a.click();
+  showToast('History exported');
+}
+
+// ── EXPORT CSV ────────────────────────────────────────────────────
+function exportCSV() {
+  syncDataFromDOM();
+  const rows = [['Name','Calling','Organization','Type','Status','Sustained Date','Notes']];
+  boardData.forEach(col => col.cards.forEach(c => {
+    const isVacant = !c.n || c.t === 'vacant';
+    rows.push([fmt(c.n),c.r,col.col,c.t,isVacant?'Vacant':'Filled',c.sustainedDate||'',c.notes||'']);
+  }));
+  const csv = rows.map(r => r.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'ward_org_chart.csv'; a.click();
+  showToast('CSV exported');
+}
+
+// ── GLOBAL EVENTS ─────────────────────────────────────────────────
+document.addEventListener('click', e => {
+  if (!e.target.closest('#ctxMenu')) document.getElementById('ctxMenu').classList.remove('open');
+  if (e.target.classList.contains('modal-bg')) e.target.classList.remove('open');
+  if (!e.target.closest('.member-search-wrap')) document.querySelectorAll('.member-dropdown').forEach(d => d.classList.remove('open'));
+});
+DASH_SECTIONS.forEach(sec => {
+  const el = document.getElementById('role-' + sec);
+  if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') addDashItem(sec); });
+});
+
+// ── INIT ──────────────────────────────────────────────────────────
+loadData();
+renderBoard();
+renderDash();
+renderHistory();
+
+</script>
+</body>
+</html>
