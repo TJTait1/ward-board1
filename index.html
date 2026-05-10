@@ -84,7 +84,20 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
 .board-wrap{overflow-x:auto;padding:1.25rem 1.5rem 3rem}
 .board{display:flex;gap:10px;align-items:flex-start;min-width:max-content}
 .column{width:var(--col-w);flex-shrink:0}
-.col-header{background:var(--hdr);color:var(--hdr-text);font-size:10px;font-weight:600;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.07em;padding:6px 8px;border-radius:3px 3px 0 0;text-align:center;line-height:1.3}
+.col-header{background:var(--hdr);color:var(--hdr-text);font-size:10px;font-weight:600;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.07em;padding:6px 8px;border-radius:3px 3px 0 0;text-align:center;line-height:1.3;cursor:grab;user-select:none;display:flex;align-items:center;justify-content:space-between;gap:4px}
+.col-header:active{cursor:grabbing}
+.col-header-title{flex:1;text-align:center}
+.col-header-del{background:transparent;border:none;color:#4a4030;cursor:pointer;font-size:13px;padding:0;line-height:1;flex-shrink:0;transition:color .15s;display:flex;align-items:center}
+.col-header-del:hover{color:#e07070}
+.col-header-drag{color:#3a3028;font-size:11px;flex-shrink:0;cursor:grab}
+.column.col-dragging{opacity:.35}
+.column.col-drag-over-left{box-shadow:-3px 0 0 0 var(--gold)}
+.column.col-drag-over-right{box-shadow:3px 0 0 0 var(--gold)}
+.col-overseer{background:#252018;padding:3px 6px;display:flex;align-items:center;gap:4px;justify-content:center}
+.col-overseer select{background:transparent;border:none;color:#8a7a5a;font-family:'DM Mono',monospace;font-size:9px;outline:none;cursor:pointer;text-align:center;max-width:130px;text-overflow:ellipsis}
+.col-overseer select:hover{color:var(--gold)}
+.col-overseer select option{background:#1e1a15;color:var(--hdr-text);font-size:11px}
+.col-overseer-label{font-size:9px;color:#4a4030;font-family:'DM Mono',monospace;white-space:nowrap}
 .col-counts{display:flex;gap:3px;justify-content:center;padding:3px 6px;background:#2a2520}
 .count-pill{font-size:9px;font-family:'DM Mono',monospace;padding:1px 5px;border-radius:8px;font-weight:500}
 .count-filled{background:#2d7a52;color:#a8ecc8}
@@ -1639,6 +1652,17 @@ function cancelTouchMove() {
   document.getElementById('moveBar').classList.remove('open');
 }
 
+// ── BISHOPRIC HELPERS ─────────────────────────────────────────────
+function getBishopricMembers() {
+  const bishopricCol = boardData.find(col =>
+    col.col.toLowerCase().includes('bishopric') || col.col.toLowerCase().includes('bishop')
+  );
+  if (!bishopricCol) return [];
+  return (bishopricCol.cards || [])
+    .filter(c => c && c.n && (c.t === 'leadership' || c.t === 'support'))
+    .map(c => ({ raw: c.n, display: fmt(c.n), role: c.r }));
+}
+
 // ── BOARD RENDER ──────────────────────────────────────────────────
 function sinkVacants(cardsEl) {
   const addBtn = cardsEl.querySelector('.add-card-btn');
@@ -1716,11 +1740,114 @@ function makeColEl(colData, colIdx) {
   const vacant = vacantCards.length;
   const col = document.createElement('div');
   col.className = 'column'; col.dataset.col = colIdx;
-  col.innerHTML = '<div class="col-header">' + colData.col + '</div>' +
-    '<div class="col-counts">' +
+  col.draggable = true;
+
+  // Header with drag handle, title, delete button
+  const header = document.createElement('div');
+  header.className = 'col-header';
+  header.innerHTML =
+    '<span class="col-header-drag" title="Drag to reorder">⠿</span>' +
+    '<span class="col-header-title">' + colData.col + '</span>' +
+    '<button class="col-header-del" title="Delete organization">×</button>';
+  header.querySelector('.col-header-del').addEventListener('click', e => {
+    e.stopPropagation();
+    const hasMembers = cards.some(c => c && c.n && c.t !== 'vacant');
+    const msg = hasMembers
+      ? 'Delete "' + colData.col + '"? It has ' + filled + ' filled callings. This cannot be undone.'
+      : 'Delete "' + colData.col + '"?';
+    if (confirm(msg)) {
+      syncDataFromDOM();
+      boardData.splice(colIdx, 1);
+      renderBoard();
+      saveToStorage();
+      showToast('"' + colData.col + '" deleted');
+    }
+  });
+  col.appendChild(header);
+
+  const countsEl = document.createElement('div');
+  countsEl.className = 'col-counts';
+  countsEl.innerHTML =
     '<span class="count-pill count-filled">' + filled + ' filled</span>' +
-    (vacant > 0 ? '<span class="count-pill count-vacant">' + vacant + ' open</span>' : '') +
-    '</div>';
+    (vacant > 0 ? '<span class="count-pill count-vacant">' + vacant + ' open</span>' : '');
+  col.appendChild(countsEl);
+
+  // Overseer dropdown
+  const overseerEl = document.createElement('div');
+  overseerEl.className = 'col-overseer';
+  const bishopricMembers = getBishopricMembers();
+  const currentOverseer = colData.overseer || '';
+  if (bishopricMembers.length) {
+    const sel = document.createElement('select');
+    sel.title = 'Assign bishopric overseer';
+    const blankOpt = document.createElement('option');
+    blankOpt.value = '';
+    blankOpt.textContent = '— assign overseer —';
+    sel.appendChild(blankOpt);
+    bishopricMembers.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.raw;
+      opt.textContent = m.display + ' (' + m.role + ')';
+      if (m.raw === currentOverseer) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener('change', () => {
+      syncDataFromDOM();
+      if (boardData[colIdx]) {
+        boardData[colIdx].overseer = sel.value;
+        saveToStorage();
+        // Update display without full re-render
+        const label = overseerEl.querySelector('.col-overseer-label');
+        if (label) label.textContent = sel.value ? '👤' : '';
+      }
+    });
+    overseerEl.appendChild(sel);
+  }
+  col.appendChild(overseerEl);
+
+  // Column drag-to-reorder
+  col.addEventListener('dragstart', e => {
+    if (e.target.closest('.card')) return;
+    window._dragCol = col;
+    window._dragColIdx = colIdx;
+    setTimeout(() => col.classList.add('col-dragging'), 0);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/col', String(colIdx));
+  });
+  col.addEventListener('dragend', () => {
+    col.classList.remove('col-dragging');
+    document.querySelectorAll('.column').forEach(c => c.classList.remove('col-drag-over-left','col-drag-over-right'));
+  });
+  col.addEventListener('dragover', e => {
+    if (!window._dragCol || window._dragCol === col) return;
+    if (e.target.closest('.col-cards')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const rect = col.getBoundingClientRect();
+    document.querySelectorAll('.column').forEach(c => c.classList.remove('col-drag-over-left','col-drag-over-right'));
+    col.classList.add(e.clientX < rect.left + rect.width / 2 ? 'col-drag-over-left' : 'col-drag-over-right');
+  });
+  col.addEventListener('dragleave', e => {
+    if (!col.contains(e.relatedTarget)) col.classList.remove('col-drag-over-left','col-drag-over-right');
+  });
+  col.addEventListener('drop', e => {
+    const draggedCol = window._dragCol;
+    if (!draggedCol || draggedCol === col) return;
+    if (e.target.closest('.col-cards')) return;
+    e.preventDefault();
+    col.classList.remove('col-drag-over-left','col-drag-over-right');
+    const board = document.getElementById('board');
+    const rect = col.getBoundingClientRect();
+    board.insertBefore(draggedCol, e.clientX < rect.left + rect.width / 2 ? col : col.nextSibling);
+    // Re-sync boardData order from DOM
+    syncDataFromDOM();
+    const cols = [...board.querySelectorAll('.column')];
+    const oldBoardData = JSON.parse(JSON.stringify(boardData));
+    boardData = cols.map(c => oldBoardData[parseInt(c.dataset.col)]).filter(Boolean);
+    cols.forEach((c, i) => { c.dataset.col = i; c.querySelector('.col-cards').dataset.col = i; });
+    window._dragCol = null;
+    saveToStorage();
+  });
   const cardsEl = document.createElement('div');
   cardsEl.className = 'col-cards'; cardsEl.dataset.col = colIdx;
   [...filledCards, ...vacantCards].forEach(c => cardsEl.appendChild(makeCardEl(c)));
@@ -1777,6 +1904,9 @@ function syncDataFromDOM() {
       });
     });
     boardData[ci].cards = newCards;
+    // Preserve overseer from the dropdown if present
+    const sel = colEl.querySelector('.col-overseer select');
+    if (sel) boardData[ci].overseer = sel.value;
   });
 }
 
