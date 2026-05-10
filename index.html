@@ -225,6 +225,59 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
   .dash-add-row input,.dash-add-row .member-search-wrap{width:100%;flex:none}
 }
 
+/* AGENDAS */
+.agenda-page{padding:1.5rem;max-width:900px}
+.agenda-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem}
+.agenda-type-btn{background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:'DM Mono',monospace;font-size:11px;padding:6px 14px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.05em}
+.agenda-type-btn:hover{border-color:var(--gold);color:var(--gold)}
+.agenda-type-btn.active{background:var(--gold);border-color:var(--gold);color:var(--hdr);font-weight:600}
+.agenda-main{display:grid;grid-template-columns:1fr 300px;gap:1.25rem}
+@media(max-width:768px){.agenda-main{grid-template-columns:1fr}}
+.agenda-editor{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.agenda-editor-header{background:#2a2520;padding:.65rem 1rem;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.agenda-editor-title{font-family:'DM Mono',monospace;font-size:12px;color:var(--gold);font-weight:500;flex:1}
+.agenda-date-input{background:#1a1510;border:1px solid #4a4030;border-radius:4px;color:var(--hdr-text);font-family:'DM Mono',monospace;font-size:11px;padding:3px 8px;outline:none}
+.agenda-date-input:focus{border-color:var(--gold)}
+.agenda-body{padding:.75rem}
+.agenda-section{margin-bottom:.75rem;border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.agenda-section-header{display:flex;align-items:center;gap:8px;padding:.5rem .75rem;background:var(--bg);border-bottom:1px solid var(--border)}
+.agenda-section-title{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:var(--text);flex:1;outline:none;background:transparent;border:none;text-transform:uppercase;letter-spacing:.05em}
+.agenda-section-title:focus{color:var(--gold)}
+.agenda-section-del{background:transparent;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0;line-height:1;transition:color .15s}
+.agenda-section-del:hover{color:#c0392b}
+.agenda-item-list{padding:.4rem .5rem}
+.agenda-item{display:flex;align-items:flex-start;gap:6px;padding:3px 4px;border-radius:3px}
+.agenda-item:hover{background:var(--bg)}
+.agenda-item-bullet{color:var(--muted);font-size:12px;padding-top:2px;flex-shrink:0}
+.agenda-item-text{font-size:12px;color:var(--text);outline:none;flex:1;min-height:18px;line-height:1.5;font-family:'DM Sans',sans-serif}
+.agenda-item-text:empty:before{content:attr(data-placeholder);color:#bbb;pointer-events:none}
+.agenda-item-del{background:transparent;border:none;color:transparent;cursor:pointer;font-size:12px;padding:0 2px;flex-shrink:0;transition:color .15s}
+.agenda-item:hover .agenda-item-del{color:#ccc}
+.agenda-item-del:hover{color:#c0392b}
+.agenda-add-item{width:100%;background:transparent;border:none;border-top:1px dashed var(--border);padding:4px 8px;font-size:11px;font-family:'DM Mono',monospace;color:#bbb;cursor:pointer;text-align:left;transition:color .15s}
+.agenda-add-item:hover{color:var(--gold)}
+.agenda-add-section{width:100%;margin-top:6px;background:transparent;border:1px dashed var(--border);border-radius:6px;padding:6px;font-size:11px;font-family:'DM Mono',monospace;color:#bbb;cursor:pointer;text-align:center;transition:all .15s}
+.agenda-add-section:hover{border-color:var(--gold);color:var(--gold)}
+.agenda-actions{display:flex;gap:8px;padding:.75rem;border-top:1px solid var(--border);flex-wrap:wrap}
+.agenda-sidebar{display:flex;flex-direction:column;gap:1rem}
+.agenda-history-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.agenda-history-header{background:#2a2520;padding:.6rem 1rem;font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);font-weight:500;text-transform:uppercase;letter-spacing:.05em}
+.agenda-history-item{padding:.5rem .75rem;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.agenda-history-item:last-child{border-bottom:none}
+.agenda-history-item:hover{background:var(--bg)}
+.agenda-history-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold)}
+.agenda-history-type{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase}
+.agenda-history-empty{padding:.75rem;font-size:12px;color:#bbb;font-family:'DM Mono',monospace;font-style:italic}
+
+/* PRINT AGENDA */
+@media print {
+  .agenda-top,.agenda-sidebar,.agenda-actions,.agenda-section-del,.agenda-item-del,.agenda-add-item,.agenda-add-section{display:none!important}
+  .agenda-main{grid-template-columns:1fr!important}
+  .agenda-editor{border:none}
+  .agenda-section-title{font-size:13px}
+  .agenda-item-text{font-size:12px}
+}
+
 /* PRINT */
 @media print{
   nav,.toolbar,.stats-bar,.add-card-btn,.add-col-btn,.ctx-menu,.toast,.modal-bg,
@@ -235,7 +288,7 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
   .col-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{background:#fff}
   .page{display:block!important}
-  #page-dashboard,#page-history,#page-stats{display:none!important}
+  #page-dashboard,#page-history,#page-stats,#page-admin{display:none!important}
 }
 
 /* MODAL */
@@ -341,6 +394,7 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
     <button class="nav-tab" onclick="showPage('dashboard',this)">Dashboard</button>
     <button class="nav-tab" onclick="showPage('stats',this)">Stats</button>
     <button class="nav-tab" onclick="showPage('history',this)">History</button>
+    <button class="nav-tab" onclick="showPage('agendas',this)">Agendas</button>
   </div>
   <div class="nav-right">
     <div id="syncIndicator" class="sync-indicator" title="Sync status">⬤ connecting...</div>
@@ -456,6 +510,37 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
       </div>
     </div>
     <div id="historyContent"></div>
+  </div>
+</div>
+
+<!-- AGENDAS PAGE -->
+<div class="page" id="page-agendas">
+  <div class="agenda-page">
+    <div class="agenda-top">
+      <button class="agenda-type-btn active" onclick="switchAgendaType('bishopric',this)">Bishopric Meeting</button>
+      <button class="agenda-type-btn" onclick="switchAgendaType('wardcouncil',this)">Ward Council</button>
+      <button class="agenda-type-btn" onclick="switchAgendaType('sacrament',this)">Sacrament Planning</button>
+    </div>
+    <div class="agenda-main">
+      <div class="agenda-editor" id="agendaEditor">
+        <div class="agenda-editor-header">
+          <span class="agenda-editor-title" id="agendaEditorTitle">Bishopric Meeting</span>
+          <input type="date" class="agenda-date-input" id="agendaDate">
+        </div>
+        <div class="agenda-body" id="agendaBody"></div>
+        <div class="agenda-actions">
+          <button class="btn accent" onclick="saveAgenda()" style="font-size:12px;padding:6px 16px">Save Meeting</button>
+          <button class="btn" onclick="window.print()" style="font-size:12px;padding:6px 14px">Print</button>
+          <button class="btn" onclick="resetAgendaToTemplate()" style="font-size:12px;padding:6px 14px">Reset to Template</button>
+        </div>
+      </div>
+      <div class="agenda-sidebar">
+        <div class="agenda-history-panel">
+          <div class="agenda-history-header">Saved Meetings</div>
+          <div id="agendaHistoryList"></div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1316,7 +1401,9 @@ function loadData() {
     if (data) {
       // Only update if a remote change came in (not our own push)
       if (!isSyncing) {
-        if (data.boardData) boardData = data.boardData;
+        if (data.boardData) boardData = data.boardData.map(col => ({
+          ...col, cards: (col.cards || []).filter(c => c != null)
+        }));
         if (data.dashData) dashData = data.dashData;
         if (data.historyData) historyData = data.historyData;
         if (data.recentlyReleased) recentlyReleased = data.recentlyReleased;
@@ -1393,6 +1480,7 @@ function showPage(id, btn) {
   if (id === 'stats') renderStatsPage();
   if (id === 'history') renderHistory(); if (id === 'stats') renderStatsPage();
   if (id === 'admin') renderAdminPage();
+  if (id === 'agendas') { renderAgendaEditor(); renderAgendaHistory(); }
   if (id === 'history') renderHistory();
 }
 
@@ -1621,8 +1709,11 @@ function makeCardEl(cardData) {
   return div;
 }
 function makeColEl(colData, colIdx) {
-  const filled = colData.cards.filter(c => c.n && c.t !== 'vacant').length;
-  const vacant = colData.cards.filter(c => !c.n || c.t === 'vacant').length;
+  const cards = colData.cards || [];
+  const filledCards = cards.filter(c => c && c.n && c.t !== 'vacant');
+  const vacantCards = cards.filter(c => !c || !c.n || c.t === 'vacant');
+  const filled = filledCards.length;
+  const vacant = vacantCards.length;
   const col = document.createElement('div');
   col.className = 'column'; col.dataset.col = colIdx;
   col.innerHTML = '<div class="col-header">' + colData.col + '</div>' +
@@ -1630,38 +1721,36 @@ function makeColEl(colData, colIdx) {
     '<span class="count-pill count-filled">' + filled + ' filled</span>' +
     (vacant > 0 ? '<span class="count-pill count-vacant">' + vacant + ' open</span>' : '') +
     '</div>';
-  const cards = document.createElement('div');
-  cards.className = 'col-cards'; cards.dataset.col = colIdx;
-  const filledCards = colData.cards.filter(c => c.n && c.t !== 'vacant');
-  const vacantCards = colData.cards.filter(c => !c.n || c.t === 'vacant');
-  [...filledCards, ...vacantCards].forEach(c => cards.appendChild(makeCardEl(c)));
+  const cardsEl = document.createElement('div');
+  cardsEl.className = 'col-cards'; cardsEl.dataset.col = colIdx;
+  [...filledCards, ...vacantCards].forEach(c => cardsEl.appendChild(makeCardEl(c)));
   const addBtn = document.createElement('button');
   addBtn.className = 'add-card-btn'; addBtn.textContent = '+ add calling';
   addBtn.onclick = () => openAddCard(colIdx);
-  cards.appendChild(addBtn);
-  cards.addEventListener('dragover', e => {
-    e.preventDefault(); cards.classList.add('drag-over');
-    const target = getDropTarget(cards, e.clientY);
-    cards.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
+  cardsEl.appendChild(addBtn);
+  cardsEl.addEventListener('dragover', e => {
+    e.preventDefault(); cardsEl.classList.add('drag-over');
+    const target = getDropTarget(cardsEl, e.clientY);
+    cardsEl.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
     if (target) target.classList.add('drop-hint-above');
   });
-  cards.addEventListener('dragleave', e => {
-    if (!cards.contains(e.relatedTarget)) {
-      cards.classList.remove('drag-over');
-      cards.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
+  cardsEl.addEventListener('dragleave', e => {
+    if (!cardsEl.contains(e.relatedTarget)) {
+      cardsEl.classList.remove('drag-over');
+      cardsEl.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
     }
   });
-  cards.addEventListener('drop', e => {
+  cardsEl.addEventListener('drop', e => {
     e.preventDefault();
-    cards.classList.remove('drag-over');
-    cards.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
+    cardsEl.classList.remove('drag-over');
+    cardsEl.querySelectorAll('.card').forEach(c => c.classList.remove('drop-hint-above'));
     const dc = window._dragCard;
     if (!dc) return;
-    const target = getDropTarget(cards, e.clientY);
-    const firstVacant = cards.querySelector('.card[data-vacant="1"]');
-    cards.insertBefore(dc, target || firstVacant || addBtn);
+    const target = getDropTarget(cardsEl, e.clientY);
+    const firstVacant = cardsEl.querySelector('.card[data-vacant="1"]');
+    cardsEl.insertBefore(dc, target || firstVacant || addBtn);
   });
-  col.appendChild(cards);
+  col.appendChild(cardsEl);
   return col;
 }
 function renderBoard() {
@@ -2341,6 +2430,284 @@ function exportCSV() {
   showToast('CSV exported');
 }
 
+// ── AGENDAS ───────────────────────────────────────────────────────
+const AGENDA_TEMPLATES = {
+  bishopric: {
+    title: 'Bishopric Meeting',
+    sections: [
+      {title:'Prayer', items:['']},
+      {title:'Spiritual Thought', items:['']},
+      {title:'Sacrament Planning', items:['Speakers:','Music:','Other:']},
+      {title:'Bode & Parker — Committees', items:['']},
+      {title:'Review Action Items', items:['']},
+      {title:'New Action Items', items:['']},
+      {title:'Other Business', items:['']},
+      {title:'Ward Needs', items:['']},
+      {title:'Closing Prayer', items:['']}
+    ]
+  },
+  wardcouncil: {
+    title: 'Ward Council',
+    sections: [
+      {title:'Opening Hymn', items:['']},
+      {title:'Prayer', items:['']},
+      {title:'Missionary', items:['Action items to review:','New action items:']},
+      {title:'Relief Society', items:['Action items to review:','New action items:']},
+      {title:'Elders Quorum', items:['Action items to review:','New action items:']},
+      {title:'Committees', items:['Action items to review:','New action items:']},
+      {title:'Sunday School', items:['Action items to review:','New action items:']},
+      {title:'Temple & Family History', items:['Action items to review:','New action items:']},
+      {title:'Ward Needs', items:['']},
+      {title:'Closing Prayer', items:['']}
+    ]
+  },
+  sacrament: {
+    title: 'Sacrament Meeting Planning',
+    sections: [
+      {title:'Date', items:['']},
+      {title:'Presiding', items:['']},
+      {title:'Conducting', items:['']},
+      {title:'Opening Hymn', items:['Number:','']},
+      {title:'Opening Prayer', items:['']},
+      {title:'Sacrament Hymn', items:['Number:','']},
+      {title:'Business', items:['Sustainings:','Releasings:','Other:']},
+      {title:'First Speaker', items:['Name:','Topic:','Time:']},
+      {title:'Intermediate Hymn', items:['Number:','']},
+      {title:'Second Speaker', items:['Name:','Topic:','Time:']},
+      {title:'Closing Hymn', items:['Number:','']},
+      {title:'Closing Prayer', items:['']},
+      {title:'Announcements', items:['']}
+    ]
+  }
+};
+
+let currentAgendaType = 'bishopric';
+let currentAgendaSections = [];
+let agendaHistory = [];
+
+function loadAgendaData() {
+  try {
+    const a = localStorage.getItem('wardAgendaHistory');
+    if (a) agendaHistory = JSON.parse(a);
+  } catch(e) {}
+  // Also listen for Firebase updates
+  db.ref('agendaHistory').on('value', snap => {
+    if (snap.val()) {
+      agendaHistory = snap.val();
+      try { localStorage.setItem('wardAgendaHistory', JSON.stringify(agendaHistory)); } catch(e) {}
+      renderAgendaHistory();
+    }
+  });
+}
+
+function saveAgendaData() {
+  try { localStorage.setItem('wardAgendaHistory', JSON.stringify(agendaHistory)); } catch(e) {}
+  db.ref('agendaHistory').set(agendaHistory).catch(() => {});
+}
+
+function switchAgendaType(type, btn) {
+  currentAgendaType = type;
+  document.querySelectorAll('.agenda-type-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  resetAgendaToTemplate();
+  renderAgendaHistory();
+}
+
+function resetAgendaToTemplate() {
+  const tmpl = AGENDA_TEMPLATES[currentAgendaType];
+  currentAgendaSections = tmpl.sections.map(s => ({
+    title: s.title,
+    items: [...s.items]
+  }));
+  document.getElementById('agendaEditorTitle').textContent = tmpl.title;
+  document.getElementById('agendaDate').value = new Date().toISOString().split('T')[0];
+  renderAgendaEditor();
+}
+
+function renderAgendaEditor() {
+  const body = document.getElementById('agendaBody');
+  body.innerHTML = '';
+  currentAgendaSections.forEach((sec, si) => {
+    const secEl = document.createElement('div');
+    secEl.className = 'agenda-section';
+
+    const header = document.createElement('div');
+    header.className = 'agenda-section-header';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'agenda-section-title';
+    titleEl.contentEditable = true;
+    titleEl.textContent = sec.title;
+    titleEl.addEventListener('input', () => { currentAgendaSections[si].title = titleEl.textContent; });
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'agenda-section-del';
+    delBtn.innerHTML = '&times;';
+    delBtn.title = 'Remove section';
+    delBtn.addEventListener('click', () => {
+      currentAgendaSections.splice(si, 1);
+      renderAgendaEditor();
+    });
+
+    header.appendChild(titleEl);
+    header.appendChild(delBtn);
+    secEl.appendChild(header);
+
+    const itemList = document.createElement('div');
+    itemList.className = 'agenda-item-list';
+
+    sec.items.forEach((item, ii) => {
+      itemList.appendChild(makeAgendaItem(si, ii, item));
+    });
+
+    const addItemBtn = document.createElement('button');
+    addItemBtn.className = 'agenda-add-item';
+    addItemBtn.textContent = '+ add item';
+    addItemBtn.addEventListener('click', () => {
+      currentAgendaSections[si].items.push('');
+      renderAgendaEditor();
+      // Focus the new item
+      setTimeout(() => {
+        const items = body.querySelectorAll('.agenda-section')[si]?.querySelectorAll('.agenda-item-text');
+        if (items) items[items.length-1]?.focus();
+      }, 50);
+    });
+
+    secEl.appendChild(itemList);
+    secEl.appendChild(addItemBtn);
+    body.appendChild(secEl);
+  });
+
+  const addSectionBtn = document.createElement('button');
+  addSectionBtn.className = 'agenda-add-section';
+  addSectionBtn.textContent = '+ add section';
+  addSectionBtn.addEventListener('click', () => {
+    currentAgendaSections.push({title:'New Section', items:['']});
+    renderAgendaEditor();
+    setTimeout(() => {
+      const secs = body.querySelectorAll('.agenda-section');
+      secs[secs.length-1]?.querySelector('.agenda-section-title')?.focus();
+    }, 50);
+  });
+  body.appendChild(addSectionBtn);
+}
+
+function makeAgendaItem(si, ii, text) {
+  const row = document.createElement('div');
+  row.className = 'agenda-item';
+
+  const bullet = document.createElement('span');
+  bullet.className = 'agenda-item-bullet';
+  bullet.textContent = '•';
+
+  const textEl = document.createElement('div');
+  textEl.className = 'agenda-item-text';
+  textEl.contentEditable = true;
+  textEl.textContent = text;
+  textEl.dataset.placeholder = 'Add note...';
+  textEl.addEventListener('input', () => {
+    currentAgendaSections[si].items[ii] = textEl.textContent;
+  });
+  textEl.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      currentAgendaSections[si].items.splice(ii+1, 0, '');
+      renderAgendaEditor();
+      setTimeout(() => {
+        const body = document.getElementById('agendaBody');
+        const items = body.querySelectorAll('.agenda-section')[si]?.querySelectorAll('.agenda-item-text');
+        if (items) items[ii+1]?.focus();
+      }, 50);
+    }
+    if (e.key === 'Backspace' && textEl.textContent === '' && currentAgendaSections[si].items.length > 1) {
+      e.preventDefault();
+      currentAgendaSections[si].items.splice(ii, 1);
+      renderAgendaEditor();
+      setTimeout(() => {
+        const body = document.getElementById('agendaBody');
+        const items = body.querySelectorAll('.agenda-section')[si]?.querySelectorAll('.agenda-item-text');
+        if (items && ii > 0) items[ii-1]?.focus();
+      }, 50);
+    }
+  });
+
+  const delBtn = document.createElement('button');
+  delBtn.className = 'agenda-item-del';
+  delBtn.innerHTML = '&times;';
+  delBtn.addEventListener('click', () => {
+    if (currentAgendaSections[si].items.length > 1) {
+      currentAgendaSections[si].items.splice(ii, 1);
+      renderAgendaEditor();
+    }
+  });
+
+  row.appendChild(bullet);
+  row.appendChild(textEl);
+  row.appendChild(delBtn);
+  return row;
+}
+
+function saveAgenda() {
+  const date = document.getElementById('agendaDate').value;
+  const tmpl = AGENDA_TEMPLATES[currentAgendaType];
+  const entry = {
+    id: Date.now(),
+    type: currentAgendaType,
+    title: tmpl.title,
+    date,
+    sections: JSON.parse(JSON.stringify(currentAgendaSections))
+  };
+  // Replace if same type + date already exists
+  const existing = agendaHistory.findIndex(a => a.type === currentAgendaType && a.date === date);
+  if (existing >= 0) agendaHistory[existing] = entry;
+  else agendaHistory.unshift(entry);
+  saveAgendaData();
+  renderAgendaHistory();
+  showToast('Meeting saved');
+}
+
+function renderAgendaHistory() {
+  const list = document.getElementById('agendaHistoryList');
+  if (!list) return;
+  const filtered = agendaHistory.filter(a => a.type === currentAgendaType);
+  if (!filtered.length) {
+    list.innerHTML = '<div class="agenda-history-empty">No saved meetings yet</div>';
+    return;
+  }
+  list.innerHTML = '';
+  filtered.forEach(entry => {
+    const item = document.createElement('div');
+    item.className = 'agenda-history-item';
+    const d = entry.date ? new Date(entry.date + 'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : 'No date';
+    item.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between">' +
+        '<div><div class="agenda-history-date">' + d + '</div>' +
+        '<div class="agenda-history-type">' + entry.title + '</div></div>' +
+        '<button style="background:transparent;border:none;color:#888;cursor:pointer;font-size:12px;padding:2px 4px" onclick="deleteAgendaEntry(' + entry.id + ');event.stopPropagation()">&times;</button>' +
+      '</div>';
+    item.addEventListener('click', () => loadAgendaEntry(entry));
+    list.appendChild(item);
+  });
+}
+
+function loadAgendaEntry(entry) {
+  currentAgendaType = entry.type;
+  currentAgendaSections = JSON.parse(JSON.stringify(entry.sections));
+  document.getElementById('agendaEditorTitle').textContent = entry.title;
+  document.getElementById('agendaDate').value = entry.date || '';
+  document.querySelectorAll('.agenda-type-btn').forEach((btn, i) => {
+    const types = ['bishopric','wardcouncil','sacrament'];
+    btn.classList.toggle('active', types[i] === entry.type);
+  });
+  renderAgendaEditor();
+}
+
+function deleteAgendaEntry(id) {
+  agendaHistory = agendaHistory.filter(a => a.id !== id);
+  saveAgendaData();
+  renderAgendaHistory();
+}
+
 // ── GLOBAL EVENTS ─────────────────────────────────────────────────
 document.addEventListener('click', e => {
   if (!e.target.closest('#ctxMenu')) document.getElementById('ctxMenu').classList.remove('open');
@@ -2407,6 +2774,8 @@ function logout() {
 // ── INIT ──────────────────────────────────────────────────────────
 function initApp() {
   loadData();
+  loadAgendaData();
+  resetAgendaToTemplate();
   renderBoard();
   renderDash();
   renderHistory();
