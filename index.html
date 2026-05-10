@@ -207,36 +207,93 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
 .move-bar-cancel{background:transparent;border:1px solid #6a6050;border-radius:4px;color:#6a6050;font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px;cursor:pointer;flex-shrink:0}
 
 /* MOBILE RESPONSIVE */
-@media (max-width: 768px) {
-  :root{--col-w:138px}
-  nav{padding:0 .6rem;flex-wrap:nowrap}
-  .ward-title{font-size:11px;margin-right:.6rem;flex-shrink:0}
-  .nav-tabs{flex-shrink:0;overflow-x:auto}
-  .nav-tab{font-size:10px;padding:0 8px}
-  .nav-right{gap:3px}
-  .btn.sm{font-size:10px;padding:3px 6px}
-  .sync-indicator{font-size:10px;padding:3px 5px}
-  .toolbar{padding:.5rem .75rem;gap:5px}
-  .search-box{width:120px;font-size:11px}
-  .filter-pill{font-size:10px;padding:2px 7px}
+
+/* Tablet (iPad) */
+@media (max-width: 900px) {
+  :root{--col-w:145px}
   .legend{display:none}
-  .board-wrap{padding:.75rem .75rem 6rem}
-  .col-header{font-size:9px;padding:4px 5px}
-  .card{font-size:10px;padding:3px 6px 4px}
-  .card-name{font-size:10px}
-  .card-role{font-size:9px}
+  .nav-right .btn.sm:not(.accent){display:none}
+  .nav-right .btn.sm.accent{display:inline-flex}
+  .sync-indicator{font-size:10px;padding:3px 6px}
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  :root{--col-w:calc(85vw)}
+
+  /* Nav — scrollable tabs, hide non-essential buttons */
+  nav{padding:0 .75rem;height:auto;min-height:48px;flex-wrap:wrap;gap:0}
+  .ward-title{font-size:11px;margin-right:.5rem;padding:.75rem 0;flex-shrink:0}
+  .nav-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex:1}
+  .nav-tabs::-webkit-scrollbar{display:none}
+  .nav-tab{font-size:10px;padding:0 10px;white-space:nowrap;height:48px}
+  .nav-right{width:100%;border-top:1px solid #3a3028;padding:.4rem .75rem;display:flex;gap:6px;justify-content:flex-end;background:var(--hdr)}
+  .nav-right .btn.sm{font-size:10px;padding:4px 8px}
+  .sync-indicator{font-size:10px;padding:3px 6px;margin-right:auto}
+
+  /* Toolbar */
+  .toolbar{padding:.5rem .75rem;gap:6px;flex-wrap:wrap}
+  .search-box{width:100%;flex:none;font-size:13px;padding:7px 12px}
+  .filter-pills-wrap{display:flex;gap:5px;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;scrollbar-width:none;padding-bottom:2px}
+  .filter-pills-wrap::-webkit-scrollbar{display:none}
+  .filter-pill{white-space:nowrap;font-size:11px;padding:4px 10px}
+  .legend{display:none}
+
+  /* Board — one column at a time, snap scrolling */
+  .board-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;padding:.75rem .75rem 6rem;scrollbar-width:none}
+  .board-wrap::-webkit-scrollbar{display:none}
+  .board{gap:12px;padding:0 calc(50vw - var(--col-w)/2 - 12px)}
+  .column{scroll-snap-align:center;width:var(--col-w);flex-shrink:0}
+  .col-header{font-size:11px;padding:8px 10px}
+  .col-header-title{font-size:11px}
+  .col-overseer select{font-size:10px}
+  .card{font-size:12px;padding:6px 9px 7px}
+  .card-name{font-size:12px}
+  .card-role{font-size:10px}
+  .add-card-btn{font-size:11px;padding:6px}
+
+  /* Dashboard */
   .dashboard{padding:.75rem}
   .dash-grid{grid-template-columns:1fr}
+  .dash-add-row{flex-direction:column;gap:6px}
+  .dash-add-row .member-search-wrap,.dash-add-row input{width:100%;flex:none}
+  .dash-add-row .btn{align-self:flex-end}
+
+  /* Stats */
   .stats-top{grid-template-columns:1fr 1fr}
   .orgs-table-header,.orgs-table-row{grid-template-columns:1fr 44px 44px 60px;padding:.4rem .75rem;font-size:11px}
+
+  /* Program panel */
+  .program-actions{flex-wrap:wrap}
+
+  /* History */
+  .hist-sections{grid-template-columns:1fr 1fr}
+
+  /* Agendas */
+  .agenda-page{padding:.75rem}
+  .agenda-top{gap:6px}
+  .agenda-type-btn{font-size:10px;padding:5px 10px}
+  .agenda-main{grid-template-columns:1fr}
 }
+
+/* Small phones */
 @media (max-width: 480px) {
-  :root{--col-w:118px}
-  .nav-tab{font-size:9px;padding:0 5px;letter-spacing:0}
-  .ward-title{display:none}
-  .dash-add-row{flex-direction:column}
-  .dash-add-row input,.dash-add-row .member-search-wrap{width:100%;flex:none}
+  :root{--col-w:calc(88vw)}
+  .nav-tab{font-size:9px;padding:0 8px}
+  .ward-title{font-size:10px}
+  .stats-top{grid-template-columns:1fr 1fr}
+  .hist-sections{grid-template-columns:1fr}
+  .board{padding:0 calc(50vw - var(--col-w)/2 - 6px)}
 }
+
+/* Scroll hint dots for board on mobile */
+.board-scroll-hint{display:none}
+@media (max-width:768px){
+  .board-scroll-hint{display:flex;justify-content:center;gap:5px;padding:.4rem 0;position:sticky;bottom:5.5rem;pointer-events:none;z-index:10}
+  .board-dot{width:6px;height:6px;border-radius:50%;background:#ccc;transition:background .2s,transform .2s}
+  .board-dot.active{background:var(--gold);transform:scale(1.3)}
+}
+
 
 /* AGENDAS */
 .agenda-page{padding:1.5rem;max-width:900px}
@@ -426,18 +483,21 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
   <div class="stats-bar" id="statsBar"></div>
   <div class="toolbar">
     <input class="search-box" type="text" id="search" placeholder="Search name or calling... (N)" oninput="handleSearch()">
-    <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
-    <button class="filter-pill" onclick="setFilter('filled',this)">Filled</button>
-    <button class="filter-pill" onclick="setFilter('vacant',this)">Vacant</button>
-    <button class="filter-pill" onclick="setFilter('leadership',this)">Leadership</button>
-    <button class="filter-pill" onclick="setFilter('longserving',this)">Long Serving</button>
+    <div class="filter-pills-wrap">
+      <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+      <button class="filter-pill" onclick="setFilter('filled',this)">Filled</button>
+      <button class="filter-pill" onclick="setFilter('vacant',this)">Vacant</button>
+      <button class="filter-pill" onclick="setFilter('leadership',this)">Leadership</button>
+      <button class="filter-pill" onclick="setFilter('longserving',this)">Long Serving</button>
+    </div>
     <div class="legend">
       <div class="leg"><div class="leg-chip" style="background:var(--green-card);border-left-color:var(--green-border)"></div>Leadership</div>
       <div class="leg"><div class="leg-chip" style="background:var(--pink-card);border-left-color:var(--pink-border)"></div>Member</div>
       <div class="leg"><div class="leg-chip" style="background:var(--blue-card);border-left-color:var(--blue-border)"></div>Support</div>
     </div>
   </div>
-  <div class="board-wrap"><div class="board" id="board"></div></div>
+  <div class="board-wrap" id="boardWrap"><div class="board" id="board"></div></div>
+  <div class="board-scroll-hint" id="boardDots"></div>
 </div>
 
 <!-- DASHBOARD PAGE -->
@@ -1591,7 +1651,10 @@ function updateStats() {
 }
 function jumpToLongServing() {
   showPage('board', document.querySelectorAll('.nav-tab')[0]);
-  setFilter('longserving', document.querySelectorAll('.filter-pill')[4]);
+  const pills = document.querySelectorAll('.filter-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  const longPill = [...pills].find(p => p.textContent.includes('Long'));
+  if (longPill) { longPill.classList.add('active'); activeFilter = 'longserving'; applyFilter(); }
 }
 
 // ── TOUCH MOVE SYSTEM ─────────────────────────────────────────────
@@ -1889,6 +1952,27 @@ function renderBoard() {
   addColBtn.onclick = openAddCol;
   board.appendChild(addColBtn);
   updateStats(); applyFilter();
+  initScrollDots();
+}
+
+function initScrollDots() {
+  const dotsEl = document.getElementById('boardDots');
+  const boardWrap = document.getElementById('boardWrap');
+  if (!dotsEl || !boardWrap) return;
+  dotsEl.innerHTML = '';
+  const cols = document.querySelectorAll('.column');
+  if (cols.length <= 1 || window.innerWidth > 768) return;
+  cols.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'board-dot' + (i === 0 ? ' active' : '');
+    dotsEl.appendChild(dot);
+  });
+  boardWrap.onscroll = () => {
+    const dots = dotsEl.querySelectorAll('.board-dot');
+    const colW = cols[0]?.offsetWidth + 12 || 1;
+    const active = Math.round(boardWrap.scrollLeft / colW);
+    dots.forEach((d, i) => d.classList.toggle('active', i === active));
+  };
 }
 function syncDataFromDOM() {
   document.querySelectorAll('.column').forEach((colEl, ci) => {
