@@ -149,12 +149,20 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
 .dash-card.meetwith .dash-card-title{color:#7a5800}
 .dash-card.meetwith .dash-badge{background:var(--action-meet-b);color:#fff}
 .dash-body{padding:.5rem .75rem .75rem}
-.dash-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:4px;margin-bottom:3px;background:#fff;border:1px solid var(--border);font-size:12px}
-.dash-item-name{font-weight:500;flex:1;color:var(--text)}
+.dash-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:4px;margin-bottom:3px;background:#fff;border:1px solid var(--border);font-size:12px;flex-wrap:wrap}
+.dash-item-main{display:flex;align-items:center;gap:8px;width:100%}
+.dash-item-name{font-weight:500;flex:1;color:var(--text);outline:none;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;min-width:0}
+.dash-item-name:focus{color:var(--gold)}
 .dash-item-role{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 .dash-item-org{font-size:10px;color:var(--muted);margin-top:1px}
-.dash-item-del{background:transparent;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;line-height:1;transition:color .15s}
+.dash-item-del{background:transparent;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;line-height:1;transition:color .15s;flex-shrink:0}
 .dash-item-del:hover{color:#c0392b}
+.dash-item-details{width:100%;display:flex;gap:6px;flex-wrap:wrap;padding-left:36px}
+.dash-item-input{font-size:11px;padding:3px 7px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;background:#faf8f4;color:var(--text);outline:none;flex:1;min-width:80px}
+.dash-item-input:focus{border-color:var(--gold)}
+.dash-item-bishop{font-size:11px;padding:3px 7px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;background:#faf8f4;color:var(--text);outline:none;max-width:180px}
+.dash-item-bishop:focus{border-color:var(--gold)}
+.dash-bishop-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;align-self:center;white-space:nowrap}
 .dash-empty{font-size:12px;color:#bbb;font-family:'DM Mono',monospace;padding:.5rem .5rem;text-align:center;font-style:italic}
 .dash-add-row{display:flex;gap:6px;padding:.5rem .75rem .75rem;flex-wrap:wrap}
 .dash-add-row input{flex:1;min-width:80px;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--text);outline:none;-webkit-appearance:none}
@@ -2167,6 +2175,9 @@ function renderDash() {
   DASH_SECTIONS.forEach(s => {
     if (!Array.isArray(dashData[s])) dashData[s] = Object.values(dashData[s] || {});
   });
+
+  const bishopricMembers = getBishopricMembers();
+
   DASH_SECTIONS.forEach(sec => {
     const list = document.getElementById('list-' + sec);
     const badge = document.getElementById('badge-' + sec);
@@ -2177,21 +2188,95 @@ function renderDash() {
     items.forEach((item, i) => {
       const row = document.createElement('div');
       row.className = 'dash-item' + (item.done ? ' done' : '');
+
       const doneStr = item.done && item.doneDate
         ? ' <span style="color:#2d7a52;font-size:10px">· done ' + item.doneDate + '</span>' : '';
-      row.innerHTML =
+
+      // Bishop options
+      const bishopOpts = '<option value="">— assign —</option>' +
+        bishopricMembers.map(m =>
+          '<option value="' + m.raw + '"' + (item.bishop === m.raw ? ' selected' : '') + '>' +
+          m.display + ' (' + m.role + ')</option>'
+        ).join('');
+
+      // Main row
+      const mainRow = document.createElement('div');
+      mainRow.className = 'dash-item-main';
+      mainRow.innerHTML =
         '<button class="dash-check" title="' + (item.done ? 'Mark pending' : 'Mark done') + '">✓</button>' +
-        '<div style="flex:1">' +
+        '<div style="flex:1;min-width:0">' +
           '<div class="dash-item-name">' + fmt(item.name) + '</div>' +
           '<div class="dash-item-org">' + (item.role||'') + (item.org ? ' · ' + item.org : '') + doneStr + '</div>' +
         '</div>' +
         '<button class="dash-item-del" title="Remove">×</button>';
-      row.querySelector('.dash-check').addEventListener('click', () => toggleDone(sec, i));
-      row.querySelector('.dash-item-del').addEventListener('click', () => removeDashItem(sec, i));
+
+      // Detail row — editable fields
+      const detailRow = document.createElement('div');
+      detailRow.className = 'dash-item-details';
+      detailRow.innerHTML =
+        '<input class="dash-item-input" type="text" placeholder="Name..." value="' + (item.name ? fmt(item.name) : '') + '" title="Edit name">' +
+        '<input class="dash-item-input" type="text" placeholder="Calling / note..." value="' + (item.role||'') + '" title="Edit calling or note">' +
+        '<span class="dash-bishop-label">Assigned to:</span>' +
+        '<select class="dash-item-bishop" title="Assign bishopric member">' + bishopOpts + '</select>';
+
+      row.appendChild(mainRow);
+      row.appendChild(detailRow);
+
+      // Events
+      mainRow.querySelector('.dash-check').addEventListener('click', () => toggleDone(sec, i));
+      mainRow.querySelector('.dash-item-del').addEventListener('click', () => removeDashItem(sec, i));
+
+      // Live edit — name
+      const nameInput = detailRow.querySelectorAll('.dash-item-input')[0];
+      nameInput.addEventListener('change', () => {
+        dashData[sec][i].name = nameInput.value.trim();
+        mainRow.querySelector('.dash-item-name').textContent = nameInput.value.trim();
+        saveToStorage();
+      });
+
+      // Live edit — role/note
+      const roleInput = detailRow.querySelectorAll('.dash-item-input')[1];
+      roleInput.addEventListener('change', () => {
+        dashData[sec][i].role = roleInput.value.trim();
+        const orgDiv = mainRow.querySelector('.dash-item-org');
+        orgDiv.textContent = roleInput.value.trim() + (dashData[sec][i].org ? ' · ' + dashData[sec][i].org : '');
+        saveToStorage();
+      });
+
+      // Bishop assignment
+      const bishopSel = detailRow.querySelector('.dash-item-bishop');
+      bishopSel.addEventListener('change', () => {
+        dashData[sec][i].bishop = bishopSel.value;
+        saveToStorage();
+        // Show on main row
+        updateBishopBadge(mainRow, bishopSel.value);
+      });
+
+      // Show bishop badge if already assigned
+      if (item.bishop) updateBishopBadge(mainRow, item.bishop);
+
       list.appendChild(row);
     });
   });
   generateProgram();
+}
+
+function updateBishopBadge(mainRow, bishopRaw) {
+  // Remove existing badge
+  const existing = mainRow.querySelector('.bishop-badge');
+  if (existing) existing.remove();
+  if (!bishopRaw) return;
+  const badge = document.createElement('span');
+  badge.className = 'bishop-badge';
+  badge.title = 'Assigned to ' + fmt(bishopRaw);
+  // Get initials
+  const parts = fmt(bishopRaw).split(' ');
+  const initials = parts.length >= 2 ? parts[0][0] + parts[parts.length-1][0] : parts[0].slice(0,2);
+  badge.textContent = initials.toUpperCase();
+  badge.style.cssText = 'font-size:10px;font-family:DM Mono,monospace;font-weight:600;background:#2a2520;color:var(--gold);border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:default';
+  // Insert before the delete button
+  const delBtn = mainRow.querySelector('.dash-item-del');
+  mainRow.insertBefore(badge, delBtn);
 }
 function toggleDone(sec, idx) {
   const item = dashData[sec][idx];
