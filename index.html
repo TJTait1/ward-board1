@@ -149,20 +149,39 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
 .dash-card.meetwith .dash-card-title{color:#7a5800}
 .dash-card.meetwith .dash-badge{background:var(--action-meet-b);color:#fff}
 .dash-body{padding:.5rem .75rem .75rem}
-.dash-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:4px;margin-bottom:3px;background:#fff;border:1px solid var(--border);font-size:12px;flex-wrap:wrap}
+.dash-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:4px;margin-bottom:3px;background:#fff;border:1px solid var(--border);font-size:12px;flex-wrap:wrap;cursor:pointer;transition:box-shadow .15s}
+.dash-item:hover{box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.dash-item.done{background:#f0faf4;border-color:#b8e8cc}
+.dash-item.done .dash-item-name{text-decoration:line-through;color:var(--muted)}
 .dash-item-main{display:flex;align-items:center;gap:8px;width:100%}
 .dash-item-name{font-weight:500;flex:1;color:var(--text);outline:none;border:none;background:transparent;font-family:'DM Sans',sans-serif;font-size:12px;min-width:0}
-.dash-item-name:focus{color:var(--gold)}
+.dash-item-chevron{font-size:10px;color:var(--muted);transition:transform .2s;flex-shrink:0;padding:2px}
+.dash-item-chevron.open{transform:rotate(90deg)}
 .dash-item-role{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
 .dash-item-org{font-size:10px;color:var(--muted);margin-top:1px}
 .dash-item-del{background:transparent;border:none;color:#ccc;cursor:pointer;font-size:14px;padding:0 2px;line-height:1;transition:color .15s;flex-shrink:0}
 .dash-item-del:hover{color:#c0392b}
-.dash-item-details{width:100%;display:flex;gap:6px;flex-wrap:wrap;padding-left:36px}
-.dash-item-input{font-size:11px;padding:3px 7px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;background:#faf8f4;color:var(--text);outline:none;flex:1;min-width:80px}
+.dash-item-details{width:100%;display:none;flex-direction:column;gap:8px;padding:8px 8px 4px 36px;border-top:1px solid #f0ece4;margin-top:4px}
+.dash-item-details.open{display:flex}
+.dash-item-input{font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;background:#faf8f4;color:var(--text);outline:none;flex:1;min-width:80px}
 .dash-item-input:focus{border-color:var(--gold)}
-.dash-item-bishop{font-size:11px;padding:3px 7px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;background:#faf8f4;color:var(--text);outline:none;max-width:180px}
+.dash-item-bishop{font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;background:#faf8f4;color:var(--text);outline:none;max-width:200px}
 .dash-item-bishop:focus{border-color:var(--gold)}
-.dash-bishop-label{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace;align-self:center;white-space:nowrap}
+.dash-bishop-label{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;align-self:center;white-space:nowrap}
+.dash-item-outcome{font-size:12px;padding:5px 8px;border:1px solid var(--border);border-radius:4px;font-family:'DM Mono',monospace;background:#faf8f4;color:var(--text);outline:none;flex-shrink:0}
+.dash-item-outcome:focus{border-color:var(--gold)}
+.dash-move-pills{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.dash-move-pill{font-size:10px;padding:1px 7px;border-radius:8px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;transition:all .15s;touch-action:manipulation;white-space:nowrap}
+.dash-move-pill:hover{border-color:var(--gold);color:var(--gold);background:rgba(200,169,110,.08)}
+.dash-move-pills:empty{display:none}
+.dash-move-btn{font-size:11px;padding:3px 10px;border-radius:10px;border:1px solid var(--border);background:transparent;font-family:'DM Mono',monospace;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;touch-action:manipulation}
+.dash-move-btn:hover{border-color:var(--gold);color:var(--gold)}
+.origin-badge{font-size:9px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:8px;background:#f0ece4;color:var(--muted);border:1px solid var(--border);white-space:nowrap;align-self:center}
+.setapart-completed{margin:6px 0 2px;border-top:1px dashed var(--border);padding-top:6px}
+.setapart-completed-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.setapart-done-item{display:flex;align-items:center;gap:6px;padding:3px 6px;font-size:11px;color:var(--muted);font-style:italic}
+.setapart-done-name{flex:1;color:var(--text);font-style:normal;font-weight:500;font-size:11px}
+.setapart-done-role{font-size:10px;font-family:'DM Mono',monospace}
 .dash-empty{font-size:12px;color:#bbb;font-family:'DM Mono',monospace;padding:.5rem .5rem;text-align:center;font-style:italic}
 .dash-add-row{display:flex;gap:6px;padding:.5rem .75rem .75rem;flex-wrap:wrap}
 .dash-add-row input{flex:1;min-width:80px;font-size:13px;padding:8px 10px;border:1px solid var(--border);border-radius:4px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--text);outline:none;-webkit-appearance:none}
@@ -357,17 +376,63 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
   .agenda-item-text{font-size:12px}
 }
 
+/* AGENDA PRINT TEMPLATE */
+.apt{display:none;font-family:'Times New Roman',serif;font-size:11pt;color:#000;background:#fff;padding:0.5in;width:100%;box-sizing:border-box}
+.apt-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6pt}
+.apt-title{font-size:16pt;font-weight:bold}
+.apt-date{font-size:12pt}
+.apt-church{text-align:center;font-size:12pt;font-weight:bold;margin-bottom:10pt;border-bottom:1pt solid #000;padding-bottom:6pt}
+.apt-cols{display:grid;grid-template-columns:1fr 1fr;gap:20pt}
+.apt-col-title{font-weight:bold;text-align:center;font-size:12pt;margin-bottom:8pt;text-decoration:underline}
+.apt-field{margin-bottom:6pt;display:flex;align-items:flex-end;gap:4pt;font-size:10.5pt}
+.apt-label{white-space:nowrap;font-variant:small-caps;flex-shrink:0}
+.apt-line{flex:1;border-bottom:1pt solid #000;height:14pt}
+.apt-section-title{font-weight:bold;text-align:center;font-size:11pt;margin:10pt 0 6pt;text-decoration:underline}
+.apt-text{font-size:10pt;margin-bottom:6pt;line-height:1.4;text-align:justify}
+.apt-numbered{margin-bottom:4pt;display:flex;gap:4pt;align-items:flex-end}
+.apt-num{flex-shrink:0;font-size:10.5pt}
+.apt-subline{padding-left:12pt;margin-bottom:2pt;display:flex;align-items:flex-end;gap:4pt;font-size:10pt}
+.apt-sublabel{flex-shrink:0;color:#444}
+.apt-indent{padding-left:12pt}
+.apt-bold{font-weight:bold}
+.apt-names{margin:4pt 0 4pt 0;padding-left:8pt}
+.apt-name-line{margin-bottom:3pt;font-size:10.5pt}
+
+@media print {
+  .apt{display:block!important}
+  #agendaEditor,.agenda-top,.agenda-sidebar,.agenda-actions,
+  .agenda-type-btn,.agenda-history-panel{display:none!important}
+  body{margin:0;padding:0}
+  .page.print-active{padding:0!important}
+  .agenda-page{padding:0!important}
+  #agendaPrintTemplate{display:block!important}
+}
+
 /* PRINT */
 @media print{
   nav,.toolbar,.stats-bar,.add-card-btn,.add-col-btn,.ctx-menu,.toast,.modal-bg,
-  .dash-add-row,.program-actions,.btn{display:none!important}
+  .dash-add-row,.program-actions,.btn,.move-bar,
+  .agenda-top,.agenda-sidebar,.agenda-actions,
+  .agenda-section-del,.agenda-item-del,.agenda-add-item,.agenda-add-section,
+  .dash-move-pills,.dash-move-row,.dash-item-del,.dash-check,
+  .dash-item-details,.col-header-del,.col-overseer{display:none!important}
   .board-wrap{overflow:visible;padding:0}
   .board{flex-wrap:wrap;gap:8px}
   .column{width:160px;page-break-inside:avoid}
   .col-header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   body{background:#fff}
-  .page{display:block!important}
-  #page-dashboard,#page-history,#page-stats,#page-admin{display:none!important}
+  .page{display:none!important}
+  .page.print-active{display:block!important}
+  .agenda-main{grid-template-columns:1fr!important}
+  .agenda-editor{border:none!important}
+  .agenda-editor-header{background:#fff!important;color:#000!important;border-bottom:2px solid #000!important}
+  .agenda-editor-title{color:#000!important;font-size:16px!important}
+  .agenda-section-header{background:#f5f5f5!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .agenda-section-title{font-size:12px!important}
+  .agenda-item-text{font-size:11px!important;min-height:24px!important}
+  .agenda-item-bullet{color:#000!important}
+  .program-panel{border:none!important;padding:0!important}
+  .program-text{border:none!important;background:#fff!important;font-size:14px!important;line-height:2!important}
 }
 
 /* MODAL */
@@ -477,7 +542,7 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
   </div>
   <div class="nav-right">
     <div id="syncIndicator" class="sync-indicator" title="Sync status">⬤ connecting...</div>
-    <button class="btn sm" onclick="window.print()" title="Print org chart">Print</button>
+    <button class="btn sm" onclick="printPage()" title="Print">Print</button>
     <button class="btn sm" onclick="triggerImport()">Import CSV</button>
     <input type="file" id="csvImportInput" accept=".csv" style="display:none" onchange="handleCSVImport(event)">
     <button class="btn sm" onclick="exportCSV()">Export CSV</button>
@@ -568,8 +633,9 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
       <div class="program-text" id="programText" contenteditable="true" spellcheck="true">Add sustainings and releasings above to generate the announcement text.</div>
       <div class="program-hint">✎ Click anywhere in the text to edit before copying</div>
       <div class="program-actions">
-        <button class="btn" onclick="generateProgram()">Generate Announcement</button>
+        <button class="btn" onclick="generateProgram();showToast('Announcement regenerated')" title="Refresh text from current sustainings and releasings">↺ Regenerate</button>
         <button class="btn accent" onclick="copyProgram()">Copy to Clipboard</button>
+        <button class="btn" onclick="printPage()">Print</button>
       </div>
     </div>
   </div>
@@ -612,7 +678,7 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
         <div class="agenda-body" id="agendaBody"></div>
         <div class="agenda-actions">
           <button class="btn accent" onclick="saveAgenda()" style="font-size:12px;padding:6px 16px">Save Meeting</button>
-          <button class="btn" onclick="window.print()" style="font-size:12px;padding:6px 14px">Print</button>
+          <button class="btn" onclick="printAgenda()" style="font-size:12px;padding:6px 14px">Print Agenda</button>
           <button class="btn" onclick="resetAgendaToTemplate()" style="font-size:12px;padding:6px 14px">Reset to Template</button>
         </div>
       </div>
@@ -624,6 +690,8 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
       </div>
     </div>
   </div>
+  <!-- Hidden print template — shown only when printing -->
+  <div id="agendaPrintTemplate" style="display:none"></div>
 </div>
 
 <!-- ADMIN PAGE -->
@@ -1403,12 +1471,7 @@ function fmt(raw) {
   const p = raw.split(',');
   return p.length === 2 ? p[1].trim() + ' ' + p[0].trim() : raw;
 }
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
-}
+// showToast defined below
 
 // ── STATE ─────────────────────────────────────────────────────────
 // ── UTILS ─────────────────────────────────────────────────────────
@@ -1417,11 +1480,21 @@ function fmt(raw) {
   const p = raw.split(',');
   return p.length === 2 ? p[1].trim() + ' ' + p[0].trim() : raw;
 }
-function showToast(msg) {
+function showToast(msg, duration) {
   const t = document.getElementById('toast');
+  // Clear any pending hide timer
+  if (window._toastTimer) clearTimeout(window._toastTimer);
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), duration || 2500);
+}
+
+function showUndoToast(msg, undoFn, duration) {
+  const t = document.getElementById('toast');
+  if (window._toastTimer) clearTimeout(window._toastTimer);
+  t.innerHTML = msg + ' <button onclick="(' + undoFn.toString() + ')()" style="margin-left:8px;background:transparent;border:1px solid var(--gold);border-radius:3px;color:var(--gold);font-family:DM Mono,monospace;font-size:11px;padding:2px 8px;cursor:pointer;touch-action:manipulation">Undo</button>';
+  t.classList.add('show');
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), duration || 6000);
 }
 function daysSince(dateStr) {
   if (!dateStr) return null;
@@ -1551,7 +1624,8 @@ function pushToFirebase() {
     lastUpdated: new Date().toISOString()
   }).then(() => {
     setSyncStatus('synced', 'synced');
-    showToast('Saved & synced');
+    // Only show saved toast if no undo toast is currently showing
+    if (!window._lastSetApart && !window._lastReleasing) showToast('Saved & synced');
   }).catch(err => {
     setSyncStatus('error', 'sync failed');
     showToast('Sync failed — saved locally');
@@ -2171,123 +2245,378 @@ const DASH_SECTIONS = ['sustaining','releasing','setapart','meetwith'];
 const SECTION_LABELS = {sustaining:'Sustaining',releasing:'Releasing',setapart:'Setting Apart',meetwith:'Meet With'};
 
 function renderDash() {
-  // Ensure all sections are proper arrays (Firebase can return objects)
   DASH_SECTIONS.forEach(s => {
     if (!Array.isArray(dashData[s])) dashData[s] = Object.values(dashData[s] || {});
   });
 
   const bishopricMembers = getBishopricMembers();
+  const SECTION_NAMES = {sustaining:'Sustaining',releasing:'Releasing',setapart:'Setting Apart',meetwith:'Meet With'};
+  const MOVE_TARGETS = {
+    meetwith:   ['sustaining','releasing'],
+    sustaining: ['setapart','releasing','meetwith'],
+    releasing:  ['sustaining','setapart','meetwith'],
+    setapart:   ['sustaining','releasing','meetwith']
+  };
 
   DASH_SECTIONS.forEach(sec => {
     const list = document.getElementById('list-' + sec);
     const badge = document.getElementById('badge-' + sec);
     const items = dashData[sec] || [];
-    badge.textContent = items.filter(i => !i.done).length;
-    if (!items.length) { list.innerHTML = '<div class="dash-empty">None yet</div>'; return; }
+    const pending = items.filter(i => !i.done);
+    badge.textContent = pending.length;
     list.innerHTML = '';
-    items.forEach((item, i) => {
-      const row = document.createElement('div');
-      row.className = 'dash-item' + (item.done ? ' done' : '');
 
-      const doneStr = item.done && item.doneDate
-        ? ' <span style="color:#2d7a52;font-size:10px">· done ' + item.doneDate + '</span>' : '';
+    if (!items.length) {
+      list.innerHTML = '<div class="dash-empty">None yet</div>';
+    } else {
+      items.forEach((item, i) => {
+        const row = document.createElement('div');
+        row.className = 'dash-item' + (item.done ? ' done' : '');
+        row.draggable = true;
+        row.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({sec, i}));
+          setTimeout(() => row.style.opacity = '0.4', 0);
+        });
+        row.addEventListener('dragend', () => row.style.opacity = '');
 
-      // Bishop options
-      const bishopOpts = '<option value="">— assign —</option>' +
-        bishopricMembers.map(m =>
-          '<option value="' + m.raw + '"' + (item.bishop === m.raw ? ' selected' : '') + '>' +
-          m.display + ' (' + m.role + ')</option>'
+        const doneStr = item.done && item.doneDate
+          ? ' <span style="color:#2d7a52;font-size:10px">· done ' + item.doneDate + '</span>' : '';
+        const originHtml = item.fromSection
+          ? '<span class="origin-badge">from ' + SECTION_NAMES[item.fromSection] + '</span>' : '';
+
+        const bishopOpts = '<option value="">— assign —</option>' +
+          bishopricMembers.map(m =>
+            '<option value="' + m.raw + '"' + (item.bishop === m.raw ? ' selected' : '') + '>' +
+            m.display + ' (' + m.role + ')</option>'
+          ).join('');
+
+        const roleText = (item.role || '').toLowerCase();
+        if (!item.outcome) {
+          item.outcome = roleText.includes('releas') ? 'releasing' :
+            (roleText.includes('call') || roleText.includes('sustain')) ? 'sustaining' : '';
+        }
+
+        const outcomeHtml = sec === 'meetwith'
+          ? '<select class="dash-item-outcome"><option value="">— outcome —</option>' +
+            '<option value="sustaining"' + (item.outcome==='sustaining'?' selected':'') + '>New Calling</option>' +
+            '<option value="releasing"' + (item.outcome==='releasing'?' selected':'') + '>Release</option>' +
+            '<option value="other"' + (item.outcome==='other'?' selected':'') + '>Other</option>' +
+            '</select>' : '';
+
+        // Main row (always visible)
+        const mainRow = document.createElement('div');
+        mainRow.className = 'dash-item-main';
+        const movePills = (MOVE_TARGETS[sec]||[]).map(t =>
+          '<button class="dash-move-pill" data-target="' + t + '" title="Move to ' + SECTION_NAMES[t] + '">→ ' + SECTION_NAMES[t] + '</button>'
         ).join('');
 
-      // Main row
-      const mainRow = document.createElement('div');
-      mainRow.className = 'dash-item-main';
-      mainRow.innerHTML =
-        '<button class="dash-check" title="' + (item.done ? 'Mark pending' : 'Mark done') + '">✓</button>' +
-        '<div style="flex:1;min-width:0">' +
-          '<div class="dash-item-name">' + fmt(item.name) + '</div>' +
-          '<div class="dash-item-org">' + (item.role||'') + (item.org ? ' · ' + item.org : '') + doneStr + '</div>' +
-        '</div>' +
-        '<button class="dash-item-del" title="Remove">×</button>';
+        mainRow.innerHTML =
+          '<button class="dash-check" title="' + (item.done ? 'Mark pending' : 'Mark done') + '">✓</button>' +
+          '<div style="flex:1;min-width:0">' +
+            '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">' +
+              '<div class="dash-item-name">' + fmt(item.name) + '</div>' + originHtml +
+            '</div>' +
+            '<div class="dash-item-org">' + (item.role||'') + (item.org?' · '+item.org:'') + doneStr + '</div>' +
+            '<div class="dash-move-pills">' + movePills + '</div>' +
+          '</div>' +
+          '<span class="dash-item-chevron">▶</span>' +
+          '<button class="dash-item-del" title="Remove">×</button>';
 
-      // Detail row — editable fields
-      const detailRow = document.createElement('div');
-      detailRow.className = 'dash-item-details';
-      detailRow.innerHTML =
-        '<input class="dash-item-input" type="text" placeholder="Name..." value="' + (item.name ? fmt(item.name) : '') + '" title="Edit name">' +
-        '<input class="dash-item-input" type="text" placeholder="Calling / note..." value="' + (item.role||'') + '" title="Edit calling or note">' +
-        '<span class="dash-bishop-label">Assigned to:</span>' +
-        '<select class="dash-item-bishop" title="Assign bishopric member">' + bishopOpts + '</select>';
+        // Detail row (collapsed by default)
+        const detailRow = document.createElement('div');
+        detailRow.className = 'dash-item-details';
+        const detInputRow = document.createElement('div');
+        detInputRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
+        detInputRow.innerHTML =
+          '<input class="dash-item-input" type="text" placeholder="Name..." value="' + (item.name ? fmt(item.name) : '') + '">' +
+          '<input class="dash-item-input" type="text" placeholder="Calling / note..." value="' + (item.role||'') + '">' +
+          outcomeHtml;
+        const detBishopRow = document.createElement('div');
+        detBishopRow.style.cssText = 'display:flex;gap:6px;align-items:center;flex-wrap:wrap';
+        detBishopRow.innerHTML =
+          '<span class="dash-bishop-label">Assigned to:</span>' +
+          '<select class="dash-item-bishop">' + bishopOpts + '</select>';
+        const moveRow = document.createElement('div');
+        moveRow.className = 'dash-move-row';
+        moveRow.innerHTML = '<span style="font-size:11px;color:var(--muted);font-family:DM Mono,monospace">Move to:</span>' +
+          (MOVE_TARGETS[sec]||[]).map(t =>
+            '<button class="dash-move-btn" data-target="' + t + '">' + SECTION_NAMES[t] + '</button>'
+          ).join('');
+        detailRow.appendChild(detInputRow);
+        detailRow.appendChild(detBishopRow);
+        detailRow.appendChild(moveRow);
 
-      row.appendChild(mainRow);
-      row.appendChild(detailRow);
+        row.appendChild(mainRow);
+        row.appendChild(detailRow);
 
-      // Events
-      mainRow.querySelector('.dash-check').addEventListener('click', () => toggleDone(sec, i));
-      mainRow.querySelector('.dash-item-del').addEventListener('click', () => removeDashItem(sec, i));
+        // Tap anywhere on row to expand (except buttons/inputs/selects)
+        row.addEventListener('click', e => {
+          if (e.target.closest('button,input,select')) return;
+          const isOpen = detailRow.classList.toggle('open');
+          const chev = mainRow.querySelector('.dash-item-chevron');
+          if (chev) chev.classList.toggle('open', isOpen);
+        });
 
-      // Live edit — name
-      const nameInput = detailRow.querySelectorAll('.dash-item-input')[0];
-      nameInput.addEventListener('change', () => {
-        dashData[sec][i].name = nameInput.value.trim();
-        mainRow.querySelector('.dash-item-name').textContent = nameInput.value.trim();
-        saveToStorage();
+        // Move pills on main row
+        mainRow.querySelectorAll('.dash-move-pill').forEach(btn => {
+          btn.addEventListener('click', e => { e.stopPropagation(); moveItemToSection(sec, i, btn.dataset.target); });
+        });
+
+        // Checkmark
+        mainRow.querySelector('.dash-check').addEventListener('click', e => {
+          e.stopPropagation();
+          toggleDone(sec, i);
+        });
+
+        // Delete
+        mainRow.querySelector('.dash-item-del').addEventListener('click', e => {
+          e.stopPropagation();
+          removeDashItem(sec, i);
+        });
+
+        // Edit name
+        detInputRow.querySelectorAll('.dash-item-input')[0].addEventListener('change', function() {
+          dashData[sec][i].name = this.value.trim();
+          mainRow.querySelector('.dash-item-name').textContent = this.value.trim();
+          saveToStorage();
+        });
+
+        // Edit role
+        detInputRow.querySelectorAll('.dash-item-input')[1].addEventListener('change', function() {
+          dashData[sec][i].role = this.value.trim();
+          mainRow.querySelector('.dash-item-org').textContent = this.value.trim() + (dashData[sec][i].org?' · '+dashData[sec][i].org:'');
+          saveToStorage();
+        });
+
+        // Outcome
+        const outcomeSel = detInputRow.querySelector('.dash-item-outcome');
+        if (outcomeSel) outcomeSel.addEventListener('change', function() {
+          dashData[sec][i].outcome = this.value; saveToStorage();
+        });
+
+        // Bishop
+        const bishopSel = detBishopRow.querySelector('.dash-item-bishop');
+        bishopSel.addEventListener('change', function() {
+          dashData[sec][i].bishop = this.value; saveToStorage();
+          updateBishopBadge(mainRow, this.value);
+        });
+        if (item.bishop) updateBishopBadge(mainRow, item.bishop);
+
+        // Move buttons
+        moveRow.querySelectorAll('.dash-move-btn').forEach(btn => {
+          btn.addEventListener('click', e => { e.stopPropagation(); moveItemToSection(sec, i, btn.dataset.target); });
+        });
+
+        list.appendChild(row);
       });
+    }
 
-      // Live edit — role/note
-      const roleInput = detailRow.querySelectorAll('.dash-item-input')[1];
-      roleInput.addEventListener('change', () => {
-        dashData[sec][i].role = roleInput.value.trim();
-        const orgDiv = mainRow.querySelector('.dash-item-org');
-        orgDiv.textContent = roleInput.value.trim() + (dashData[sec][i].org ? ' · ' + dashData[sec][i].org : '');
-        saveToStorage();
-      });
-
-      // Bishop assignment
-      const bishopSel = detailRow.querySelector('.dash-item-bishop');
-      bishopSel.addEventListener('change', () => {
-        dashData[sec][i].bishop = bishopSel.value;
-        saveToStorage();
-        // Show on main row
-        updateBishopBadge(mainRow, bishopSel.value);
-      });
-
-      // Show bishop badge if already assigned
-      if (item.bishop) updateBishopBadge(mainRow, item.bishop);
-
-      list.appendChild(row);
+    // Drop zone — entire list body and each card
+    const dropHandler = (e) => {
+      e.preventDefault();
+      list.style.background = '';
+      list.querySelectorAll('.dash-item').forEach(r => r.style.outline = '');
+      try {
+        const {sec:fromSec, i:fromIdx} = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (fromSec !== sec) moveItemToSection(fromSec, fromIdx, sec);
+      } catch(err) {}
+    };
+    list.addEventListener('dragover', e => {
+      e.preventDefault();
+      list.style.background = 'rgba(200,169,110,.07)';
+      // Highlight target card if hovering over one
+      list.querySelectorAll('.dash-item').forEach(r => r.style.outline = '');
+      const targetRow = e.target.closest('.dash-item');
+      if (targetRow) targetRow.style.outline = '2px solid var(--gold)';
     });
+    list.addEventListener('dragleave', e => {
+      if (!list.contains(e.relatedTarget)) {
+        list.style.background = '';
+        list.querySelectorAll('.dash-item').forEach(r => r.style.outline = '');
+      }
+    });
+    list.addEventListener('drop', dropHandler);
+
+    // Setting Apart: show completed strip
+    if (sec === 'setapart') {
+      const completed = (dashData._setapartCompleted || []);
+      if (completed.length) {
+        const strip = document.createElement('div');
+        strip.className = 'setapart-completed';
+        strip.innerHTML = '<div class="setapart-completed-label">✓ Set apart this week</div>';
+        completed.forEach((c, ci) => {
+          const row = document.createElement('div');
+          row.className = 'setapart-done-item';
+          row.innerHTML =
+            '<span style="color:#2d7a52">✓</span>' +
+            '<span class="setapart-done-name">' + fmt(c.name) + '</span>' +
+            '<span class="setapart-done-role">' + (c.role||'') + '</span>' +
+            '<button title="Move back to Setting Apart" style="margin-left:auto;background:transparent;border:none;color:#bbb;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;transition:color .15s" onmouseover="this.style.color=\'#c8a96e\'" onmouseout="this.style.color=\'#bbb\'">↩</button>';
+          row.querySelector('button').addEventListener('click', () => {
+            dashData._setapartCompleted.splice(ci, 1);
+            if (!Array.isArray(dashData.setapart)) dashData.setapart = [];
+            dashData.setapart.push(Object.assign({}, c, {done:false, doneDate:null}));
+            renderDash(); saveToStorage();
+            showToast('Moved back to Setting Apart');
+          });
+          strip.appendChild(row);
+        });
+        list.appendChild(strip);
+      }
+    }
+    // Releasing: show completed strip
+    if (sec === 'releasing') {
+      const completed = (dashData._releasingCompleted || []);
+      if (completed.length) {
+        const strip = document.createElement('div');
+        strip.className = 'setapart-completed';
+        strip.innerHTML = '<div class="setapart-completed-label">✓ Released this week</div>';
+        completed.forEach((c, ci) => {
+          const row = document.createElement('div');
+          row.className = 'setapart-done-item';
+          row.innerHTML =
+            '<span style="color:#2d7a52">✓</span>' +
+            '<span class="setapart-done-name">' + fmt(c.name) + '</span>' +
+            '<span class="setapart-done-role">' + (c.role||'') + '</span>' +
+            '<button title="Move back to Releasing" style="margin-left:auto;background:transparent;border:none;color:#bbb;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;transition:color .15s" onmouseover="this.style.color=\'#c8a96e\'" onmouseout="this.style.color=\'#bbb\'">↩</button>';
+          row.querySelector('button').addEventListener('click', () => {
+            dashData._releasingCompleted.splice(ci, 1);
+            if (!Array.isArray(dashData.releasing)) dashData.releasing = [];
+            dashData.releasing.push(Object.assign({}, c, {done:false, doneDate:null}));
+            renderDash(); saveToStorage();
+            showToast('Moved back to Releasing');
+          });
+          strip.appendChild(row);
+        });
+        list.appendChild(strip);
+      }
+    }
   });
   generateProgram();
 }
 
+function moveItemToSection(fromSec, fromIdx, toSec) {
+  if (!Array.isArray(dashData[fromSec]) || !Array.isArray(dashData[toSec])) return;
+  const item = dashData[fromSec][fromIdx];
+  if (!item) return;
+  const moved = Object.assign({}, item, {
+    done: false,
+    doneDate: null,
+    fromSection: fromSec
+  });
+  dashData[toSec].push(moved);
+  dashData[fromSec].splice(fromIdx, 1);
+  renderDash();
+  saveToStorage();
+  const SECTION_NAMES = {sustaining:'Sustaining',releasing:'Releasing',setapart:'Setting Apart',meetwith:'Meet With'};
+  showToast(fmt(item.name) + ' moved to ' + SECTION_NAMES[toSec]);
+}
+
 function updateBishopBadge(mainRow, bishopRaw) {
-  // Remove existing badge
   const existing = mainRow.querySelector('.bishop-badge');
   if (existing) existing.remove();
   if (!bishopRaw) return;
   const badge = document.createElement('span');
   badge.className = 'bishop-badge';
   badge.title = 'Assigned to ' + fmt(bishopRaw);
-  // Get initials
   const parts = fmt(bishopRaw).split(' ');
   const initials = parts.length >= 2 ? parts[0][0] + parts[parts.length-1][0] : parts[0].slice(0,2);
   badge.textContent = initials.toUpperCase();
   badge.style.cssText = 'font-size:10px;font-family:DM Mono,monospace;font-weight:600;background:#2a2520;color:var(--gold);border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:default';
-  // Insert before the delete button
   const delBtn = mainRow.querySelector('.dash-item-del');
   mainRow.insertBefore(badge, delBtn);
 }
+
 function toggleDone(sec, idx) {
+  if (!Array.isArray(dashData[sec])) return;
   const item = dashData[sec][idx];
   item.done = !item.done;
   item.doneDate = item.done ? new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}) : null;
+
+  if (item.done) {
+    // Setting Apart → auto-archive to completed strip, no prompt
+    if (sec === 'setapart') {
+      const completed = Object.assign({}, item);
+      if (!Array.isArray(dashData._setapartCompleted)) dashData._setapartCompleted = [];
+      dashData._setapartCompleted.push(completed);
+      dashData[sec].splice(idx, 1);
+      renderDash(); saveToStorage();
+      window._lastSetApart = {item: completed};
+      showUndoToast(fmt(item.name) + ' set apart', undoSetApart, 6000);
+      return;
+    }
+    // Releasing → auto-archive to completed strip, no prompt
+    if (sec === 'releasing') {
+      const completed = Object.assign({}, item);
+      if (!Array.isArray(dashData._releasingCompleted)) dashData._releasingCompleted = [];
+      dashData._releasingCompleted.push(completed);
+      dashData[sec].splice(idx, 1);
+      renderDash(); saveToStorage();
+      window._lastReleasing = {item: completed};
+      showUndoToast(fmt(item.name) + ' released', undoReleasing, 6000);
+      return;
+    }
+    // Meet With → auto-move to sustaining or releasing
+    if (sec === 'meetwith') {
+      let nextSec = null;
+      if (item.outcome === 'sustaining') nextSec = 'sustaining';
+      else if (item.outcome === 'releasing') nextSec = 'releasing';
+      if (nextSec) {
+        setTimeout(() => {
+          const NAMES = {sustaining:'Sustaining',releasing:'Releasing',setapart:'Setting Apart',meetwith:'Meet With'};
+          if (confirm(fmt(item.name) + ' checked — move to ' + NAMES[nextSec] + '?')) {
+            moveItemToSection(sec, idx, nextSec);
+          } else { renderDash(); saveToStorage(); }
+        }, 150);
+        return;
+      }
+    }
+    // Sustaining → prompt to move to Setting Apart
+    if (sec === 'sustaining') {
+      setTimeout(() => {
+        if (confirm(fmt(item.name) + ' sustained — move to Setting Apart?')) {
+          moveItemToSection(sec, idx, 'setapart');
+        } else { renderDash(); saveToStorage(); }
+      }, 150);
+      return;
+    }
+  }
+
   renderDash(); saveToStorage();
   const allItems = DASH_SECTIONS.flatMap(s => dashData[s]);
   if (allItems.length > 0 && allItems.every(i => i.done)) {
     setTimeout(() => { if (confirm('All items are done! Archive this week to history?')) archiveCurrentWeek(true); }, 200);
   }
 }
+
+function undoSetApart() {
+  if (!window._lastSetApart) return;
+  if (window._toastTimer) clearTimeout(window._toastTimer);
+  document.getElementById('toast').classList.remove('show');
+  if (!Array.isArray(dashData.setapart)) dashData.setapart = [];
+  if (!Array.isArray(dashData._setapartCompleted)) dashData._setapartCompleted = [];
+  const item = window._lastSetApart.item;
+  dashData._setapartCompleted = dashData._setapartCompleted.filter(c => c !== item);
+  dashData.setapart.push(Object.assign({}, item, {done: false, doneDate: null}));
+  window._lastSetApart = null;
+  renderDash(); saveToStorage();
+  showToast('Undone');
+}
+
+function undoReleasing() {
+  if (!window._lastReleasing) return;
+  if (window._toastTimer) clearTimeout(window._toastTimer);
+  document.getElementById('toast').classList.remove('show');
+  if (!Array.isArray(dashData.releasing)) dashData.releasing = [];
+  if (!Array.isArray(dashData._releasingCompleted)) dashData._releasingCompleted = [];
+  const item = window._lastReleasing.item;
+  dashData._releasingCompleted = dashData._releasingCompleted.filter(c => c !== item);
+  dashData.releasing.push(Object.assign({}, item, {done: false, doneDate: null}));
+  window._lastReleasing = null;
+  renderDash(); saveToStorage();
+  showToast('Undone');
+}
+
 function addDashItem(sec) {
   const raw = selectedMembers[sec] || document.getElementById('input-' + sec).value.trim();
   const role = document.getElementById('role-' + sec).value.trim();
@@ -2308,9 +2637,19 @@ function removeDashItem(sec, idx) {
 }
 
 // ── SACRAMENT PROGRAM GENERATOR ───────────────────────────────────
+function cleanRole(role) {
+  if (!role) return '';
+  // Strip leading action words that get doubled up e.g. "Release as X" → "X"
+  return role.replace(/^(release as|releasing as|released as|call as|called as|sustain as|sustained as)\s*/i, '').trim();
+}
+
 function generateProgram() {
-  const sustainings = dashData.sustaining || [];
-  const releasings = dashData.releasing || [];
+  // Include both active and completed items
+  const sustainings = (dashData.sustaining || []);
+  const releasings = [
+    ...(dashData._releasingCompleted || []),
+    ...(dashData.releasing || [])
+  ];
   const el = document.getElementById('programText');
   if (!sustainings.length && !releasings.length) {
     el.textContent = 'Add sustainings and releasings above to generate the announcement text.';
@@ -2320,14 +2659,14 @@ function generateProgram() {
   if (releasings.length) {
     text += 'The following have been released and we express appreciation for their service:\n\n';
     releasings.forEach(item => {
-      text += '  ' + fmt(item.name) + (item.role ? ' as ' + item.role : '') + (item.org ? ' in the ' + item.org : '') + '.\n';
+      text += '  ' + fmt(item.name) + (item.role ? ' as ' + cleanRole(item.role) : '') + (item.org ? ' in the ' + item.org : '') + '.\n';
     });
     text += '\nAll those who wish to express thanks for their service, please do so by the uplifted hand.\n\n';
   }
   if (sustainings.length) {
     text += 'The following have been called to serve and will be presented for a sustaining vote:\n\n';
     sustainings.forEach(item => {
-      text += '  ' + fmt(item.name) + (item.role ? ' as ' + item.role : '') + (item.org ? ' in the ' + item.org : '') + '.\n';
+      text += '  ' + fmt(item.name) + (item.role ? ' as ' + cleanRole(item.role) : '') + (item.org ? ' in the ' + item.org : '') + '.\n';
     });
     text += '\nAll those in favor, please manifest it by the uplifted hand. Any opposed by the same sign.';
   }
@@ -2471,10 +2810,15 @@ function archiveCurrentWeek(silent) {
   const existing = historyData.findIndex(w => w.weekLabel === weekLabel);
   const snapshot = {};
   DASH_SECTIONS.forEach(s => { snapshot[s] = JSON.parse(JSON.stringify(dashData[s])); });
+  // Include completed strips so they appear in history
+  snapshot._setapartCompleted = JSON.parse(JSON.stringify(dashData._setapartCompleted || []));
+  snapshot._releasingCompleted = JSON.parse(JSON.stringify(dashData._releasingCompleted || []));
   const entry = Object.assign({weekLabel, date:new Date().toISOString()}, snapshot);
   if (existing >= 0) historyData[existing] = entry;
   else historyData.unshift(entry);
   DASH_SECTIONS.forEach(s => { dashData[s] = dashData[s].filter(i => !i.done); });
+  dashData._setapartCompleted = [];
+  dashData._releasingCompleted = [];
   saveToStorage(); renderDash(); renderHistory();
   showToast('Week archived');
 }
@@ -2498,13 +2842,20 @@ function renderHistory() {
     {key:'meetwith',  label:'Met With',   cls:'m'},
   ];
   const pills = secs.map(sc => {
-    const count = (week[sc.key]||[]).length;
+    const active = (week[sc.key]||[]).length;
+    const done = sc.key === 'releasing' ? (week._releasingCompleted||[]).length
+                : sc.key === 'setapart'  ? (week._setapartCompleted||[]).length : 0;
+    const count = active + done;
     return count ? '<span class="hist-pill ' + sc.cls + '">' + count + ' ' + sc.label.toLowerCase() + '</span>' : '';
   }).join('');
   const sections = secs.map(sc => {
     const items = week[sc.key] || [];
-    const entries = items.length
-      ? items.map(item =>
+    // Completed items for releasing and setapart
+    const completedKey = sc.key === 'releasing' ? '_releasingCompleted' : sc.key === 'setapart' ? '_setapartCompleted' : null;
+    const completedItems = completedKey ? (week[completedKey] || []) : [];
+    const allItems = [...completedItems.map(i => Object.assign({}, i, {done:true})), ...items];
+    const entries = allItems.length
+      ? allItems.map(item =>
           '<div class="hist-entry">' +
           (item.done ? '<span style="color:#2d7a52;margin-right:3px">\u2713</span>' : '<span style="color:#ccc;margin-right:3px">\u25cb</span>') +
           '<div><span class="hist-entry-name">' + fmt(item.name) + '</span>' +
@@ -2743,6 +3094,169 @@ function confirmResetBoard() {
   }
 }
 
+// ── AGENDA PRINT ──────────────────────────────────────────────────
+function syncAgendaFromDOM() {
+  // Read current state of agenda editor back into currentAgendaSections
+  const body = document.getElementById('agendaBody');
+  if (!body) return;
+  const sectionEls = body.querySelectorAll('.agenda-section');
+  sectionEls.forEach((secEl, si) => {
+    if (!currentAgendaSections[si]) return;
+    const titleEl = secEl.querySelector('.agenda-section-title');
+    if (titleEl) currentAgendaSections[si].title = titleEl.textContent.trim();
+    const itemEls = secEl.querySelectorAll('.agenda-item-text');
+    currentAgendaSections[si].items = [...itemEls].map(el => el.textContent.trim());
+  });
+}
+
+function printAgenda() {
+  // Sync DOM edits first
+  syncAgendaFromDOM();
+  const date = document.getElementById('agendaDate').value;
+  const dateStr = date
+    ? new Date(date + 'T12:00:00').toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})
+    : '___________________';
+
+  // Get sustainings and releasings from dashboard
+  const sustainings = (dashData.sustaining || []);
+  const releasings = [
+    ...(dashData._releasingCompleted || []),
+    ...(dashData.releasing || [])
+  ];
+
+  const field = (label, width) =>
+    `<div class="apt-field"><span class="apt-label">${label}</span><div class="apt-line" style="min-width:${width||60}pt"></div></div>`;
+
+  const numberedLines = (n, withAs) => Array.from({length:n}, (_,i) =>
+    `<div class="apt-numbered"><span class="apt-num">${i+1}</span><div class="apt-line"></div></div>` +
+    (withAs ? `<div class="apt-subline"><span class="apt-sublabel">as</span><div class="apt-line"></div></div>` : '')
+  ).join('');
+
+  // Build releasing section
+  const releasingNames = releasings.length
+    ? releasings.map((_,i) =>
+        `<div class="apt-numbered"><span class="apt-num">${i+1}</span><div class="apt-line" style="flex:1">${releasings[i] ? `<span style="padding-left:4pt;font-size:10.5pt">${fmt(releasings[i].name)}</span>` : ''}</div></div>` +
+        `<div class="apt-subline"><span class="apt-sublabel">as</span><div class="apt-line">${releasings[i]?.role ? `<span style="padding-left:4pt;font-size:10pt">${cleanRole(releasings[i].role)}</span>` : ''}</div></div>`
+      ).join('') + numberedLines(Math.max(0, 4 - releasings.length), true)
+    : numberedLines(4, true);
+
+  // Build sustaining section
+  const sustainingNames = sustainings.length
+    ? sustainings.map((_,i) =>
+        `<div class="apt-numbered"><span class="apt-num">${i+1}</span><div class="apt-line" style="flex:1">${sustainings[i] ? `<span style="padding-left:4pt;font-size:10.5pt">${fmt(sustainings[i].name)}</span>` : ''}</div></div>` +
+        `<div class="apt-subline"><span class="apt-sublabel">as</span><div class="apt-line">${sustainings[i]?.role ? `<span style="padding-left:4pt;font-size:10pt">${cleanRole(sustainings[i].role)}</span>` : ''}</div></div>`
+      ).join('') + numberedLines(Math.max(0, 4 - sustainings.length), true)
+    : numberedLines(4, true);
+
+  if (currentAgendaType === 'sacrament') {
+    // Pull typed values from agenda sections by title
+    const getField = (title) => {
+      const sec = currentAgendaSections.find(s => s.title.toLowerCase().includes(title.toLowerCase()));
+      return sec ? sec.items.filter(i => i).join(', ') : '';
+    };
+    const presiding = getField('presiding') || '';
+    const conducting = getField('conducting') || '';
+    const sacHymn = getField('sacrament hymn') || '';
+    const openHymn = getField('opening hymn') || '';
+    const closeHymn = getField('closing hymn') || '';
+    const benediction = getField('benediction') || '';
+    const invocation = getField('invocation') || '';
+    const musicalNumber = getField('musical') || '';
+    const speakersSec = currentAgendaSections.filter(s => s.title.toLowerCase().includes('speaker'));
+    const speakers = speakersSec.map(s => s.items.filter(i => i && !i.endsWith(':')).join(' — ')).filter(i => i);
+    const announceSec = currentAgendaSections.find(s => s.title.toLowerCase().includes('announc'));
+    const announcements = announceSec ? announceSec.items.filter(i => i) : [];
+
+    // Full two-column sacrament program
+    document.getElementById('agendaPrintTemplate').innerHTML = `
+      <div class="apt">
+        <div class="apt-header">
+          <div class="apt-title">Ward Sacrament Meeting</div>
+          <div class="apt-date"><strong>Date:</strong> ${dateStr}</div>
+        </div>
+        <div class="apt-church">The Church of Jesus Christ of Latter-day Saints</div>
+        <div class="apt-cols">
+          <!-- LEFT COLUMN -->
+          <div>
+            <div class="apt-col-title">Opening</div>
+            <div class="apt-field"><span class="apt-label">Welcome</span><div class="apt-line"><span style="padding-left:4pt">${conducting}</span></div></div>
+            <div class="apt-field"><span class="apt-label">Presiding</span><div class="apt-line"><span style="padding-left:4pt">${presiding}</span></div></div>
+            <div class="apt-field"><span class="apt-label">Conducting</span><div class="apt-line"><span style="padding-left:4pt">${conducting}</span></div></div>
+            <div class="apt-field"><span class="apt-label">Opening Hymn</span><div class="apt-line"><span style="padding-left:4pt">${openHymn}</span></div></div>
+            <div class="apt-field"><span class="apt-label">Invocation</span><div class="apt-line"><span style="padding-left:4pt">${invocation}</span></div></div>
+
+            <div class="apt-section-title">Ward Business</div>
+            <p class="apt-text">The following individuals have been <span class="apt-bold">released</span> from the positions indicated and we propose that they be given a vote of thanks for their service:</p>
+            ${releasingNames}
+            <p class="apt-text">Those who wish to express their appreciation may manifest it by the uplifted hand.</p>
+            <p class="apt-text">The following members have been <span class="apt-bold">called</span> to the positions indicated. Please stand as your names are read and remain standing until the vote has been taken:</p>
+            ${sustainingNames}
+            <p class="apt-text">All in favor may manifest it by the uplifted hand. Any opposed may also manifest it.</p>
+          </div>
+          <!-- RIGHT COLUMN -->
+          <div>
+            <div class="apt-col-title">Stake Business</div>
+            <div class="apt-line" style="margin-bottom:4pt"></div>
+            <p class="apt-text">has some stake business.</p>
+
+            <div class="apt-section-title">Sacrament Program</div>
+            <div class="apt-field"><span class="apt-label">Sacrament Hymn</span><div class="apt-line"><span style="padding-left:4pt">${sacHymn}</span></div></div>
+            <div class="apt-field"><span class="apt-label">Speakers:</span></div>
+            ${speakers.length
+              ? speakers.map((s,i) => `<div class="apt-numbered"><span class="apt-num">${i+1}</span><div class="apt-line"><span style="padding-left:4pt">${s}</span></div></div>`).join('') + numberedLines(Math.max(0,4-speakers.length),false)
+              : numberedLines(4,false)}
+            <div class="apt-field" style="margin-top:4pt"><span class="apt-label">Musical Number</span><div class="apt-line"><span style="padding-left:4pt">${musicalNumber}</span></div></div>
+            <div class="apt-field"><span class="apt-label">Closing Hymn</span><div class="apt-line"><span style="padding-left:4pt">${closeHymn}</span></div></div>
+            <div class="apt-field"><span class="apt-label">Benediction</span><div class="apt-line"><span style="padding-left:4pt">${benediction}</span></div></div>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    // Standard agenda print for bishopric/ward council
+    const sections = currentAgendaSections.map(sec =>
+      `<div style="margin-bottom:10pt;page-break-inside:avoid">
+        <div style="font-weight:bold;font-size:11pt;text-transform:uppercase;letter-spacing:0.05em;border-bottom:0.5pt solid #ccc;padding-bottom:2pt;margin-bottom:6pt">${sec.title}</div>
+        ${sec.items.map(item =>
+          `<div style="display:flex;align-items:flex-end;gap:6pt;margin-bottom:5pt">
+            <span style="font-size:10pt;flex-shrink:0">${item ? '•' : '•'}</span>
+            <div style="flex:1;border-bottom:0.5pt solid #ccc;min-height:18pt;padding-left:4pt;font-size:10.5pt">${item || ''}</div>
+          </div>`
+        ).join('')}
+      </div>`
+    ).join('');
+
+    const title = AGENDA_TEMPLATES[currentAgendaType]?.title || 'Meeting Agenda';
+    document.getElementById('agendaPrintTemplate').innerHTML = `
+      <div class="apt">
+        <div class="apt-header">
+          <div class="apt-title">${title}</div>
+          <div class="apt-date"><strong>Date:</strong> ${dateStr}</div>
+        </div>
+        <div class="apt-church">The Church of Jesus Christ of Latter-day Saints — Orem 40th YSA Ward</div>
+        <div style="columns:2;column-gap:24pt;column-rule:0.5pt solid #ddd">${sections}</div>
+      </div>`;
+  }
+
+  // Print
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('print-active'));
+  document.getElementById('page-agendas').classList.add('print-active');
+  window.print();
+  setTimeout(() => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('print-active'));
+  }, 1000);
+}
+function printPage() {
+  // Mark only the currently active page for printing
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('print-active'));
+  const active = document.querySelector('.page.active');
+  if (active) active.classList.add('print-active');
+  window.print();
+  // Clean up after print dialog closes
+  setTimeout(() => {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('print-active'));
+  }, 1000);
+}
+
 // ── EXPORT CSV ────────────────────────────────────────────────────
 function exportCSV() {
   syncDataFromDOM();
@@ -2792,19 +3306,18 @@ const AGENDA_TEMPLATES = {
   sacrament: {
     title: 'Sacrament Meeting Planning',
     sections: [
-      {title:'Date', items:['']},
       {title:'Presiding', items:['']},
       {title:'Conducting', items:['']},
-      {title:'Opening Hymn', items:['Number:','']},
-      {title:'Opening Prayer', items:['']},
-      {title:'Sacrament Hymn', items:['Number:','']},
-      {title:'Business', items:['Sustainings:','Releasings:','Other:']},
+      {title:'Opening Hymn', items:['']},
+      {title:'Invocation', items:['']},
+      {title:'Sacrament Hymn', items:['']},
       {title:'First Speaker', items:['Name:','Topic:','Time:']},
-      {title:'Intermediate Hymn', items:['Number:','']},
       {title:'Second Speaker', items:['Name:','Topic:','Time:']},
-      {title:'Closing Hymn', items:['Number:','']},
-      {title:'Closing Prayer', items:['']},
-      {title:'Announcements', items:['']}
+      {title:'Musical Number', items:['']},
+      {title:'Third Speaker', items:['Name:','Topic:','Time:']},
+      {title:'Fourth Speaker', items:['Name:','Topic:','Time:']},
+      {title:'Closing Hymn', items:['']},
+      {title:'Benediction', items:['']}
     ]
   }
 };
