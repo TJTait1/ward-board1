@@ -11,9 +11,9 @@
   --pink-card:#fcd4e4; --pink-border:#e07090;
   --blue-card:#cce0f5; --blue-border:#5b9bd5;
   --vacant-card:#ebebeb; --vacant-border:#bbb;
-  --bg:#f0ece4; --surface:#faf8f4; --border:#e0dbd0;
-  --text:#2a2520; --muted:#7a7060;
-  --hdr:#1e1a15; --hdr-text:#f5f0e8; --gold:#c8a96e;
+  --bg:#f3f7fa; --surface:#fff; --border:#d7e3ea;
+  --text:#173247; --muted:#5f7584;
+  --hdr:#087394; --hdr-text:#fff; --gold:#007fa3;
   --col-w:162px;
   --action-sustain:#d4edda; --action-sustain-b:#2d7a52;
   --action-release:#fce4e4; --action-release-b:#c0392b;
@@ -504,6 +504,77 @@ nav{background:var(--hdr);display:flex;align-items:center;gap:0;height:52px;posi
 .rr-item:last-child{border-bottom:none}
 .rr-name{font-weight:500;flex:1}
 .rr-meta{font-size:10px;color:var(--muted);font-family:'DM Mono',monospace}
+
+/* Blue and white theme */
+.sync-indicator{color:var(--muted);border-color:var(--border)}
+.sync-indicator.saving{border-color:var(--gold)}
+
+.login-screen{background:var(--bg)}
+.login-box{background:var(--surface);border-color:var(--border);box-shadow:0 12px 36px rgba(23,50,71,.08)}
+.login-logo{color:var(--text)}
+.login-sub{color:var(--muted)}
+.login-input{background:#f8fbfd;border-color:var(--border);color:var(--text)}
+.login-input::placeholder{color:#8295a2}
+.login-btn{color:#fff}
+.login-btn:hover{background:#086381}
+.login-hint{color:var(--muted)}
+
+nav{background:var(--surface);border-bottom-color:var(--border)}
+.ward-title{color:var(--text)}
+.nav-tab{color:var(--muted)}
+.nav-tab:hover{color:var(--text)}
+.btn{border-color:var(--border);color:var(--muted)}
+.btn.accent{color:#fff}
+.btn.accent:hover{background:#086381;border-color:#086381}
+.filter-pill.active,.agenda-type-btn.active{color:#fff}
+.btn,.card,.member-opt{-webkit-tap-highlight-color:rgba(11,130,167,.15)}
+.nav-right{background:var(--surface)}
+.stats-bar{background:#eaf3f7;border-bottom-color:var(--border)}
+.stat-l{color:var(--muted)}
+.stat-sep{color:#c4d6e0}
+
+.col-header{background:var(--hdr);color:#fff}
+.col-header-del,.col-header-drag{color:#d2e5ee}
+.col-overseer{background:#e6f0f5}
+.col-overseer select{color:var(--muted)}
+.col-overseer select:hover{color:var(--gold)}
+.col-overseer select option{background:#fff;color:var(--text)}
+.col-overseer-label{color:var(--muted)}
+.col-counts{background:#eaf3f7}
+.col-cards{background:#f1f6f9}
+.col-cards.drag-over{background:#e1eff5}
+.add-card-btn,.add-col-btn{border-color:var(--border);color:var(--muted)}
+.origin-badge{background:var(--bg)}
+.dash-item-details{border-top-color:var(--border)}
+.dash-item-input,.dash-item-bishop,.dash-item-outcome{background:var(--surface)}
+.card-note{color:#26566b;background:rgba(11,130,167,.12)}
+.add-card-btn:hover,.dash-move-pill:hover{background:rgba(11,130,167,.06)}
+.card.touch-selected{box-shadow:0 0 0 2px var(--gold),0 4px 16px rgba(11,130,167,.25)!important}
+.fill-bar-wrap{background:#dbe7ee}
+
+.hist-week-header,.agenda-editor-header,.agenda-history-header,
+.orgs-table-header,.rr-header{background:#eaf3f7;color:var(--text)}
+.agenda-editor-title,.agenda-history-date,.stat-card-n{color:var(--gold)}
+.agenda-date-input{background:#fff;border-color:var(--border);color:var(--text)}
+.move-bar{background:var(--surface)}
+.move-bar-org{background:var(--hdr);border-color:var(--hdr);color:#fff}
+.move-bar-org:hover,.move-bar-org.active{background:var(--gold);border-color:var(--gold);color:#fff}
+.move-bar-cancel{border-color:var(--border);color:var(--muted)}
+
+.ctx-menu{background:#fff;border-color:var(--border)}
+.ctx-item{color:var(--text)}
+.ctx-item:hover{background:var(--bg)}
+.ctx-sep{border-color:var(--border)}
+.toast{background:var(--hdr);border-color:var(--hdr);color:#fff}
+.toast button{color:#fff!important;border-color:#fff!important}
+.orgs-table-header{border-bottom:1px solid var(--border)}
+.orgs-table-row:hover,.orgs-table-row.expanded{background:#f1f6f9}
+.org-members-drawer{background:var(--surface)}
+.member-opt:hover,.member-opt:active{background:#eaf3f7}
+.member-opt mark{background:rgba(11,130,167,.2)}
+@media(max-width:640px){
+  .nav-right{background:var(--surface);border-top-color:var(--border)}
+}
 </style>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -2423,7 +2494,7 @@ function renderDash() {
     };
     list.addEventListener('dragover', e => {
       e.preventDefault();
-      list.style.background = 'rgba(200,169,110,.07)';
+      list.style.background = 'rgba(11,130,167,.07)';
       // Highlight target card if hovering over one
       list.querySelectorAll('.dash-item').forEach(r => r.style.outline = '');
       const targetRow = e.target.closest('.dash-item');
@@ -2451,7 +2522,7 @@ function renderDash() {
             '<span style="color:#2d7a52">✓</span>' +
             '<span class="setapart-done-name">' + fmt(c.name) + '</span>' +
             '<span class="setapart-done-role">' + (c.role||'') + '</span>' +
-            '<button title="Move back to Setting Apart" style="margin-left:auto;background:transparent;border:none;color:#bbb;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;transition:color .15s" onmouseover="this.style.color=\'#c8a96e\'" onmouseout="this.style.color=\'#bbb\'">↩</button>';
+            '<button title="Move back to Setting Apart" style="margin-left:auto;background:transparent;border:none;color:#8295a2;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;transition:color .15s" onmouseover="this.style.color=\'#0b82a7\'" onmouseout="this.style.color=\'#8295a2\'">↩</button>';
           row.querySelector('button').addEventListener('click', () => {
             dashData._setapartCompleted.splice(ci, 1);
             if (!Array.isArray(dashData.setapart)) dashData.setapart = [];
@@ -2478,7 +2549,7 @@ function renderDash() {
             '<span style="color:#2d7a52">✓</span>' +
             '<span class="setapart-done-name">' + fmt(c.name) + '</span>' +
             '<span class="setapart-done-role">' + (c.role||'') + '</span>' +
-            '<button title="Move back to Releasing" style="margin-left:auto;background:transparent;border:none;color:#bbb;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;transition:color .15s" onmouseover="this.style.color=\'#c8a96e\'" onmouseout="this.style.color=\'#bbb\'">↩</button>';
+            '<button title="Move back to Releasing" style="margin-left:auto;background:transparent;border:none;color:#8295a2;cursor:pointer;font-size:13px;padding:0 2px;line-height:1;transition:color .15s" onmouseover="this.style.color=\'#0b82a7\'" onmouseout="this.style.color=\'#8295a2\'">↩</button>';
           row.querySelector('button').addEventListener('click', () => {
             dashData._releasingCompleted.splice(ci, 1);
             if (!Array.isArray(dashData.releasing)) dashData.releasing = [];
@@ -2522,7 +2593,7 @@ function updateBishopBadge(mainRow, bishopRaw) {
   const parts = fmt(bishopRaw).split(' ');
   const initials = parts.length >= 2 ? parts[0][0] + parts[parts.length-1][0] : parts[0].slice(0,2);
   badge.textContent = initials.toUpperCase();
-  badge.style.cssText = 'font-size:10px;font-family:DM Mono,monospace;font-weight:600;background:#2a2520;color:var(--gold);border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:default';
+  badge.style.cssText = 'font-size:10px;font-family:DM Mono,monospace;font-weight:600;background:#087394;color:#fff;border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;cursor:default';
   const delBtn = mainRow.querySelector('.dash-item-del');
   mainRow.insertBefore(badge, delBtn);
 }
@@ -2869,7 +2940,7 @@ function renderHistory() {
     '<div class="hist-week">' +
       '<div class="hist-week-header">' +
         '<span class="hist-week-label">Week of ' + week.weekLabel + '</span>' +
-        '<div class="hist-week-pills">' + (pills||'<span style="font-size:11px;color:#6a6050">empty</span>') + '</div>' +
+        '<div class="hist-week-pills">' + (pills||'<span style="font-size:11px;color:#5f7584">empty</span>') + '</div>' +
         '<button class="btn sm" style="margin-left:12px" onclick="deleteHistoryWeek(' + idx + ')">Delete</button>' +
       '</div>' +
       '<div class="hist-sections">' + sections + '</div>' +
