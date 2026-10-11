@@ -547,6 +547,7 @@ nav{background:var(--surface);border-bottom-color:var(--border)}
 .origin-badge{background:var(--bg)}
 .dash-item-details{border-top-color:var(--border)}
 .dash-item-input,.dash-item-bishop,.dash-item-outcome{background:var(--surface)}
+#target-sustaining,.dash-item-details select[aria-label="Calling on org chart"]{width:100%;min-width:0;max-width:100%;flex:1 1 100%}
 .card-note{color:#26566b;background:rgba(11,130,167,.12)}
 .add-card-btn:hover,.dash-move-pill:hover{background:rgba(11,130,167,.06)}
 .card.touch-selected{box-shadow:0 0 0 2px var(--gold),0 4px 16px rgba(11,130,167,.25)!important}
@@ -658,6 +659,9 @@ nav{background:var(--surface);border-bottom-color:var(--border)}
             <div class="member-dropdown" id="drop-sustaining"></div>
           </div>
           <input type="text" placeholder="Calling..." id="role-sustaining">
+          <select id="target-sustaining" class="dash-item-outcome" aria-label="Calling on org chart" onchange="selectSustainingCalling(this.value)">
+            <option value="">Choose org chart calling (optional)</option>
+          </select>
           <button class="btn accent" onclick="addDashItem('sustaining')">Add</button>
         </div>
       </div>
@@ -785,12 +789,13 @@ nav{background:var(--surface);border-bottom-color:var(--border)}
       </div>
 
       <div class="program-panel" style="margin-bottom:1.25rem">
-        <h3 style="margin-bottom:.5rem">Import from LCR CSV</h3>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:1rem;line-height:1.6">Export callings from LCR, then import here. Choose whether to <strong>merge</strong> (add new callings without removing existing ones) or <strong>replace</strong> (rebuild orgs from the CSV).</p>
+        <h3 style="margin-bottom:.5rem">Import Members or Callings</h3>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:1rem;line-height:1.6">A <strong>member directory</strong> updates member search and ward statistics without changing callings or dashboard items. Only names are stored; age, gender, and birth date are not imported. A <strong>calling export</strong> updates the org chart using the mode below. Every import has a preview before confirmation.</p>
+        <p id="memberDirectoryStatus" role="status" style="font-size:12px;color:var(--muted);margin-bottom:.75rem"></p>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <select id="importMode" style="padding:7px 10px;border:1px solid var(--border);border-radius:4px;font-size:12px;font-family:'DM Mono',monospace;outline:none;background:#fff">
-            <option value="merge">Merge — add new, keep existing</option>
-            <option value="replace">Replace — rebuild from CSV</option>
+            <option value="merge">Callings: merge — keep existing</option>
+            <option value="replace">Callings: replace — rebuild chart</option>
           </select>
           <button class="btn accent" onclick="triggerImport()" style="font-size:12px;padding:7px 18px">Choose CSV File</button>
         </div>
@@ -881,12 +886,34 @@ nav{background:var(--surface);border-bottom-color:var(--border)}
 </div>
 
 <!-- Context Menu -->
+<div class="modal-bg" id="sustainingAssignmentModal">
+  <div class="modal">
+    <h3>Update Org Chart</h3>
+    <p id="sustainingAssignmentName" style="font-size:13px;margin-bottom:12px"></p>
+    <p style="font-size:12px;color:var(--muted)">Choose the calling to fill, or an organization for a new calling. Occupied callings must be released first.</p>
+    <label for="sustainingAssignmentTarget">Calling / Organization</label>
+    <select id="sustainingAssignmentTarget"></select>
+    <label for="sustainingAssignmentRole">Calling / Role (for a new calling)</label>
+    <input id="sustainingAssignmentRole" type="text">
+    <label for="sustainingAssignmentType">Card Color</label>
+    <select id="sustainingAssignmentType">
+      <option value="member">Member (pink)</option>
+      <option value="leadership">Leadership (green)</option>
+      <option value="support">Support (blue)</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('sustainingAssignmentModal')">Cancel</button>
+      <button class="btn accent" onclick="confirmSustainingAssignment()">Sustain &amp; Update Chart</button>
+    </div>
+  </div>
+</div>
+
 <div class="ctx-menu" id="ctxMenu">
   <div class="ctx-item" onclick="ctxEdit()">Edit / Notes</div>
-  <div class="ctx-item" onclick="ctxMarkVacant()">Mark Vacant</div>
+  <div class="ctx-item" onclick="ctxMarkVacant()">Release → Dashboard</div>
   <div class="ctx-sep"></div>
   <div class="ctx-item" onclick="ctxSendTo('sustaining')">+ Sustaining</div>
-  <div class="ctx-item" onclick="ctxSendTo('releasing')">+ Releasing</div>
+  <div class="ctx-item" onclick="ctxSendTo('releasing')">Release &amp; Open Dashboard</div>
   <div class="ctx-item" onclick="ctxSendTo('setapart')">+ Set Apart</div>
   <div class="ctx-item" onclick="ctxSendTo('meetwith')">+ Meet With</div>
   <div class="ctx-sep"></div>
@@ -896,7 +923,7 @@ nav{background:var(--surface);border-bottom-color:var(--border)}
 <div class="toast" id="toast"></div>
 
 <script>
-const MEMBERS = [
+const DEFAULT_MEMBERS = [
   {raw:'Abbott, Joshua Myron', display:'Joshua Myron Abbott'},
   {raw:'Adcox, Abbie', display:'Abbie Adcox'},
   {raw:'Aguirre, Camila', display:'Camila Aguirre'},
@@ -1311,6 +1338,11 @@ const MEMBERS = [
   {raw:'Young, Colby', display:'Colby Young'},
   {raw:'Young, Garrett John', display:'Garrett John Young'}
 ];
+let MEMBERS = DEFAULT_MEMBERS.map(member => ({...member}));
+let memberDirectoryUpdatedAt = '';
+let memberDirectorySyncState = 'original';
+let memberDirectorySaving = false;
+const MEMBER_DIRECTORY_KEY = 'wardMemberDirectory';
 
 // ── BOARD DATA ───────────────────────────────────────────────────
 
@@ -1591,6 +1623,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const wardRef = db.ref('ward');
+// Keep the directory separate: older versions saving the board cannot erase it.
+const memberRef = db.ref('wardMembers');
 
 let isSyncing = false;
 let saveTimeout = null;
@@ -1603,6 +1637,92 @@ function setSyncStatus(status, msg) {
 }
 
 // ── STORAGE (Firebase) ────────────────────────────────────────────
+function normalizeMemberRecords(records) {
+  if (!records || typeof records !== 'object') throw new Error('Member directory must contain a list of names');
+  const values = Array.isArray(records) ? records : Object.values(records);
+  const seen = new Set();
+  const members = [];
+  values.forEach(record => {
+    if (!record || typeof record.raw !== 'string' || !record.raw.trim()) return;
+    const raw = record.raw.trim().replace(/\s+/g, ' ');
+    const key = normalizedMember(raw);
+    if (seen.has(key)) return;
+    seen.add(key);
+    members.push({raw, display:fmt(raw)});
+  });
+  return members.sort((a, b) => a.raw.localeCompare(b.raw));
+}
+
+function cacheMemberDirectory(pending) {
+  try {
+    localStorage.setItem(MEMBER_DIRECTORY_KEY, JSON.stringify({
+      members:MEMBERS, updatedAt:memberDirectoryUpdatedAt, pending
+    }));
+    return true;
+  } catch(err) {
+    console.warn('Member directory could not be cached on this device');
+    showToast('Member list could not be saved on this device');
+    return false;
+  }
+}
+
+function refreshMemberDirectoryUI() {
+  const status = document.getElementById('memberDirectoryStatus');
+  if (status) {
+    const states = {
+      original:'original member list',
+      cached:'saved member list — waiting for sync',
+      saving:'updated on this device — syncing',
+      local:'saved on this device only — reimport the CSV to retry syncing',
+      synced:'member list synced'
+    };
+    status.textContent = MEMBERS.length + ' members — ' + states[memberDirectorySyncState];
+  }
+  document.querySelectorAll('.member-dropdown').forEach(el => el.classList.remove('open'));
+  if (document.getElementById('page-stats').classList.contains('active')) renderStatsPage();
+}
+
+function applyMemberDirectory(data, state) {
+  const members = normalizeMemberRecords(data.members);
+  if (!members.length) throw new Error('Member directory has no usable member names');
+  MEMBERS = members;
+  memberDirectoryUpdatedAt = typeof data.updatedAt === 'string' ? data.updatedAt : '';
+  memberDirectorySyncState = state;
+  cacheMemberDirectory(state === 'local' || state === 'saving');
+  refreshMemberDirectoryUI();
+}
+
+function loadMemberDirectory() {
+  try {
+    const cached = localStorage.getItem(MEMBER_DIRECTORY_KEY);
+    if (cached) {
+      const data = JSON.parse(cached);
+      applyMemberDirectory(data, data.pending ? 'local' : 'cached');
+    }
+  } catch(err) {
+    console.warn('Saved member directory could not be loaded');
+    showToast('Saved member directory could not be loaded — using the original list');
+  }
+  memberRef.on('value', snapshot => {
+    if (memberDirectorySaving) return;
+    const data = snapshot.val();
+    if (!data) { refreshMemberDirectoryUI(); return; }
+    // A failed local import must not be replaced by an older remote directory.
+    if (memberDirectorySyncState === 'local' && data.updatedAt !== memberDirectoryUpdatedAt) return;
+    try { applyMemberDirectory(data, 'synced'); }
+    catch(err) {
+      console.warn('Shared member directory could not be loaded');
+      showToast('Shared member directory has an invalid format');
+    }
+  }, err => {
+    if (memberDirectorySyncState === 'cached') memberDirectorySyncState = 'local';
+    refreshMemberDirectoryUI();
+    showToast('Member directory sync unavailable — using the current member list');
+    console.warn('Member directory sync unavailable');
+  });
+  refreshMemberDirectoryUI();
+}
+
 function loadData() {
   // Load from localStorage as immediate fallback while Firebase connects
   try {
@@ -1619,6 +1739,7 @@ function loadData() {
     boardData = JSON.parse(JSON.stringify(DEFAULT_DATA));
   }
 
+  loadMemberDirectory();
   setSyncStatus('saving', 'connecting...');
 
   // Listen for live updates from Firebase
@@ -1633,10 +1754,13 @@ function loadData() {
         if (data.dashData) {
           const dd = data.dashData;
           dashData = {
+            ...dd,
             sustaining: Array.isArray(dd.sustaining) ? dd.sustaining : Object.values(dd.sustaining || {}),
             releasing:  Array.isArray(dd.releasing)  ? dd.releasing  : Object.values(dd.releasing  || {}),
             setapart:   Array.isArray(dd.setapart)   ? dd.setapart   : Object.values(dd.setapart   || {}),
-            meetwith:   Array.isArray(dd.meetwith)   ? dd.meetwith   : Object.values(dd.meetwith   || {})
+            meetwith:   Array.isArray(dd.meetwith)   ? dd.meetwith   : Object.values(dd.meetwith   || {}),
+            _releasingCompleted: Array.isArray(dd._releasingCompleted) ? dd._releasingCompleted : Object.values(dd._releasingCompleted || {}),
+            _setapartCompleted: Array.isArray(dd._setapartCompleted) ? dd._setapartCompleted : Object.values(dd._setapartCompleted || {})
           };
         }
         if (data.historyData) historyData = data.historyData;
@@ -1754,11 +1878,18 @@ function filterMembers(context) {
   dropEl.innerHTML = '';
   matches.forEach(m => {
     const re = new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi');
-    const hiD = m.display.replace(re, '<mark>$1</mark>');
-    const hiR = m.raw.replace(re, '<mark>$1</mark>');
+    const highlight = (element, value) => value.split(re).forEach((part, index) => {
+      const node = index % 2 ? document.createElement('mark') : document.createTextNode(part);
+      if (index % 2) node.textContent = part;
+      element.appendChild(node);
+    });
     const opt = document.createElement('div');
     opt.className = 'member-opt';
-    opt.innerHTML = '<strong>' + hiD + '</strong><span style="color:var(--muted);font-size:10px;margin-left:6px">' + hiR + '</span>';
+    const display = document.createElement('strong');
+    const raw = document.createElement('span');
+    raw.style.cssText = 'color:var(--muted);font-size:10px;margin-left:6px';
+    highlight(display, m.display); highlight(raw, m.raw);
+    opt.append(display, raw);
     const handler = function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -1906,6 +2037,8 @@ function makeCardEl(cardData) {
   div.dataset.vacant = isVacant ? '1' : '0';
   div.dataset.type = cardData.t;
   div.dataset.raw = cardData.n || '';
+  div.dataset.callingId = cardData.callingId;
+  div.dataset.vacantType = cardData.vacantType || (cardData.t !== 'vacant' ? cardData.t : '');
   if (cardData.sustainedDate) div.dataset.sustainedDate = cardData.sustainedDate;
   if (cardData.notes) div.dataset.notes = cardData.notes;
   const yrs = yearsSince(cardData.sustainedDate);
@@ -2116,6 +2249,7 @@ function makeColEl(colData, colIdx) {
   return col;
 }
 function renderBoard() {
+  ensureCallingIds();
   const board = document.getElementById('board');
   board.innerHTML = '';
   boardData.forEach((col, ci) => board.appendChild(makeColEl(col, ci)));
@@ -2152,6 +2286,8 @@ function syncDataFromDOM() {
     const newCards = [];
     colEl.querySelectorAll('.card').forEach(cardEl => {
       newCards.push({
+        callingId: cardEl.dataset.callingId,
+        vacantType: cardEl.dataset.vacantType || '',
         n: cardEl.dataset.raw || '',
         r: cardEl.querySelector('.card-role').textContent,
         t: (cardEl.dataset.raw ? cardEl.dataset.type : 'vacant') || 'vacant',
@@ -2275,22 +2411,9 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 function ctxEdit() { document.getElementById('ctxMenu').classList.remove('open'); if (ctxCardEl) openEditCard(ctxCardEl); }
 function ctxMarkVacant() {
   document.getElementById('ctxMenu').classList.remove('open');
-  if (!ctxCardEl) return;
-  const raw = ctxCardEl.dataset.raw || '';
-  const role = ctxCardEl.querySelector('.card-role').textContent;
-  let org = '';
-  const colEl = ctxCardEl.closest('.column');
-  if (colEl) { const ci = parseInt(colEl.dataset.col); if (boardData[ci]) org = boardData[ci].col; }
-  if (raw) {
-    recentlyReleased.unshift({name:raw, role, org, date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})});
-    recentlyReleased = recentlyReleased.slice(0, 30);
-  }
-  ctxCardEl.innerHTML = '<div class="card-name">Vacant</div><div class="card-role">' + role + '</div>';
-  ctxCardEl.className = 'card vacant'; ctxCardEl.draggable = false;
-  ctxCardEl.dataset.type = 'vacant'; ctxCardEl.dataset.vacant = '1';
-  ctxCardEl.dataset.name = ''; ctxCardEl.dataset.raw = '';
-  ctxCardEl.dataset.sustainedDate = ''; ctxCardEl.dataset.notes = '';
-  sinkVacants(ctxCardEl.parentNode); syncDataFromDOM(); updateStats(); saveToStorage();
+  if (!ctxCardEl) return false;
+  syncDataFromDOM();
+  return releaseBoardCalling(ctxCardEl.dataset.callingId);
 }
 function ctxDelete() {
   document.getElementById('ctxMenu').classList.remove('open');
@@ -2300,22 +2423,216 @@ function ctxDelete() {
 function ctxSendTo(section) {
   document.getElementById('ctxMenu').classList.remove('open');
   if (!ctxCardEl) return;
+  if (section === 'releasing') {
+    if (ctxMarkVacant()) showPage('dashboard', document.querySelectorAll('.nav-tab')[1]);
+    return;
+  }
   const raw = ctxCardEl.dataset.raw || '';
   const role = ctxCardEl.querySelector('.card-role').textContent;
   let org = '';
   const colEl = ctxCardEl.closest('.column');
   if (colEl) { const ci = parseInt(colEl.dataset.col); if (boardData[ci]) org = boardData[ci].col; }
-  dashData[section].push({name:raw||'Unknown', role, org, done:false, doneDate:null});
+  if (!raw) {
+    if (section === 'sustaining') {
+      renderDash();
+      document.getElementById('target-sustaining').value = ctxCardEl.dataset.callingId;
+      selectSustainingCalling(ctxCardEl.dataset.callingId);
+      showPage('dashboard', document.querySelectorAll('.nav-tab')[1]);
+      document.getElementById('input-sustaining').focus();
+    } else showToast('Choose a member first');
+    return;
+  }
+  if (!Array.isArray(dashData[section])) dashData[section] = [];
+  if (!dashData[section].some(item => sameCallingAction(item, raw, role, org, ctxCardEl.dataset.callingId))) {
+    dashData[section].push({name:raw, role, org, boardCallingId:ctxCardEl.dataset.callingId, done:false, doneDate:null});
+  }
   renderDash();
+  saveToStorage();
   showPage('dashboard', document.querySelectorAll('.nav-tab')[1]);
   showToast('Added to ' + section);
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
+function ensureCallingIds() {
+  boardData.forEach(col => {
+    if (!col.orgId) col.orgId = crypto.randomUUID();
+    (col.cards || []).forEach(card => {
+      if (!card.callingId) card.callingId = crypto.randomUUID();
+    });
+  });
+}
+
+function normalizedCalling(value) {
+  return cleanRole(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function normalizedMember(value) {
+  return fmt(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
+function findBoardCalling(callingId) {
+  for (const col of boardData) {
+    const card = (col.cards || []).find(c => c.callingId === callingId);
+    if (card) return {col, card};
+  }
+  return null;
+}
+
+function sameCallingAction(item, name, role, org, callingId) {
+  if (item.done || normalizedMember(item.name) !== normalizedMember(name)) return false;
+  if (item.boardCallingId && callingId) return item.boardCallingId === callingId;
+  return normalizedCalling(item.role) === normalizedCalling(role) &&
+    (item.org || '').toLowerCase() === (org || '').toLowerCase();
+}
+
+function releaseBoardCalling(callingId) {
+  const target = findBoardCalling(callingId);
+  if (!target || !target.card.n || target.card.t === 'vacant') {
+    showToast('This calling is already vacant');
+    return false;
+  }
+  const {col, card} = target;
+  if (!Array.isArray(dashData.releasing)) dashData.releasing = [];
+  if (!dashData.releasing.some(item => sameCallingAction(item, card.n, card.r, col.col, callingId))) {
+    dashData.releasing.push({
+      name:card.n, role:card.r, org:col.col, boardCallingId:callingId,
+      cardType:card.t, done:false, doneDate:null
+    });
+  }
+  recentlyReleased.unshift({
+    name:card.n, role:card.r, org:col.col,
+    date:new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})
+  });
+  recentlyReleased = recentlyReleased.slice(0, 30);
+  card.vacantType = card.t;
+  card.n = '';
+  card.t = 'vacant';
+  card.sustainedDate = '';
+  card.notes = '';
+  renderBoard();
+  renderDash();
+  saveToStorage();
+  showToast('Calling left vacant; member added to Releasings');
+  return true;
+}
+
+function populateCallingSelect(select, name, selectedId) {
+  select.replaceChildren(new Option('Choose org chart calling (optional)', ''));
+  boardData.forEach(col => (col.cards || []).forEach(card => {
+    if (!card.n || card.t === 'vacant' || (name && normalizedMember(card.n) === normalizedMember(name))) {
+      select.add(new Option(col.col + ' — ' + card.r, card.callingId));
+    }
+  }));
+  select.value = selectedId || '';
+}
+
+function selectSustainingCalling(callingId) {
+  const target = findBoardCalling(callingId);
+  if (target) document.getElementById('role-sustaining').value = target.card.r;
+}
+
+function sustainingTarget(item) {
+  if (item.boardCallingId) return findBoardCalling(item.boardCallingId);
+  const matches = [];
+  boardData.forEach(col => (col.cards || []).forEach(card => {
+    if (normalizedCalling(card.r) === normalizedCalling(item.role) &&
+        (!item.org || col.col.toLowerCase() === item.org.toLowerCase())) matches.push({col, card});
+  }));
+  const existing = matches.filter(t => t.card.n && t.card.t !== 'vacant' &&
+    normalizedMember(t.card.n) === normalizedMember(item.name));
+  if (existing.length) return existing.length === 1 ? existing[0] : null;
+  const vacant = matches.filter(t => !t.card.n || t.card.t === 'vacant');
+  return vacant.length === 1 ? vacant[0] : null;
+}
+
+function applySustainingToBoard(item, target) {
+  if (!target) return false;
+  const {col, card} = target;
+  if (card.n && card.t !== 'vacant' && normalizedMember(card.n) !== normalizedMember(item.name)) {
+    showToast('Release the current member from this calling first');
+    return false;
+  }
+  card.t = item.cardType || (card.t !== 'vacant' ? card.t : card.vacantType) || 'member';
+  card.n = item.name;
+  const now = new Date();
+  card.sustainedDate = card.sustainedDate ||
+    [now.getFullYear(), String(now.getMonth()+1).padStart(2,'0'), String(now.getDate()).padStart(2,'0')].join('-');
+  item.boardCallingId = card.callingId;
+  item.org = col.col;
+  item.role = card.r;
+  renderBoard();
+  return true;
+}
+
+let pendingSustainingItem = null;
+function openSustainingAssignment(item) {
+  pendingSustainingItem = item;
+  document.getElementById('sustainingAssignmentName').textContent = 'Sustaining: ' + fmt(item.name);
+  const select = document.getElementById('sustainingAssignmentTarget');
+  select.replaceChildren(new Option('Choose a calling or organization', ''));
+  boardData.forEach(col => {
+    (col.cards || []).forEach(card => {
+      if (!card.n || card.t === 'vacant' || normalizedMember(card.n) === normalizedMember(item.name)) {
+        select.add(new Option(col.col + ' — ' + card.r, 'card:' + card.callingId));
+      }
+    });
+    select.add(new Option('New calling in ' + col.col, 'org:' + col.orgId));
+  });
+  document.getElementById('sustainingAssignmentRole').value = cleanRole(item.role);
+  document.getElementById('sustainingAssignmentType').value = item.cardType || 'member';
+  select.onchange = function() {
+    const target = this.value.startsWith('card:') ? findBoardCalling(this.value.slice(5)) : null;
+    const type = target ? (target.card.t !== 'vacant' ? target.card.t : target.card.vacantType) : item.cardType;
+    document.getElementById('sustainingAssignmentType').value = type || 'member';
+  };
+  document.getElementById('sustainingAssignmentModal').classList.add('open');
+}
+
+function confirmSustainingAssignment() {
+  const item = pendingSustainingItem;
+  const idx = (dashData.sustaining || []).indexOf(item);
+  if (idx < 0 || item.done) {
+    closeModal('sustainingAssignmentModal');
+    showToast('The dashboard changed. Please select the current item again.');
+    return;
+  }
+  const value = document.getElementById('sustainingAssignmentTarget').value;
+  let target = null;
+  if (value.startsWith('card:')) target = findBoardCalling(value.slice(5));
+  else if (value.startsWith('org:')) {
+    const col = boardData.find(c => c.orgId === value.slice(4));
+    const role = cleanRole(document.getElementById('sustainingAssignmentRole').value);
+    if (!role) { showToast('Enter the new calling'); return; }
+    if (col) {
+      const matches = col.cards.filter(c => normalizedCalling(c.r) === normalizedCalling(role));
+      if (matches.length) {
+        showToast('That calling already exists. Choose its vacant card, or release its current member first.');
+        return;
+      }
+      const card = {callingId:crypto.randomUUID(), n:'', r:role, t:'vacant'};
+      col.cards.push(card);
+      target = {col, card};
+    }
+  }
+  if (!target) { showToast('Choose a calling or organization'); return; }
+  if (target.card.n && target.card.t !== 'vacant' &&
+      normalizedMember(target.card.n) !== normalizedMember(item.name)) {
+    showToast('This calling is occupied. Release its current member first.');
+    return;
+  }
+  item.boardCallingId = target.card.callingId;
+  item.cardType = document.getElementById('sustainingAssignmentType').value;
+  closeModal('sustainingAssignmentModal');
+  toggleDone('sustaining', idx);
+}
+
 const DASH_SECTIONS = ['sustaining','releasing','setapart','meetwith'];
 const SECTION_LABELS = {sustaining:'Sustaining',releasing:'Releasing',setapart:'Setting Apart',meetwith:'Meet With'};
 
 function renderDash() {
+  ensureCallingIds();
+  const callingSelect = document.getElementById('target-sustaining');
+  populateCallingSelect(callingSelect, '', callingSelect.value);
   DASH_SECTIONS.forEach(s => {
     if (!Array.isArray(dashData[s])) dashData[s] = Object.values(dashData[s] || {});
   });
@@ -2402,6 +2719,20 @@ function renderDash() {
           '<input class="dash-item-input" type="text" placeholder="Name..." value="' + (item.name ? fmt(item.name) : '') + '">' +
           '<input class="dash-item-input" type="text" placeholder="Calling / note..." value="' + (item.role||'') + '">' +
           outcomeHtml;
+        if (sec === 'sustaining') {
+          const targetSelect = document.createElement('select');
+          targetSelect.className = 'dash-item-outcome';
+          targetSelect.setAttribute('aria-label', 'Calling on org chart');
+          populateCallingSelect(targetSelect, item.name, item.boardCallingId);
+          targetSelect.addEventListener('change', function() {
+            item.boardCallingId = this.value;
+            const target = findBoardCalling(this.value);
+            if (target) { item.role = target.card.r; item.org = target.col.col; }
+            else item.org = '';
+            renderDash(); saveToStorage();
+          });
+          detInputRow.appendChild(targetSelect);
+        }
         const detBishopRow = document.createElement('div');
         detBishopRow.style.cssText = 'display:flex;gap:6px;align-items:center;flex-wrap:wrap';
         detBishopRow.innerHTML =
@@ -2455,12 +2786,16 @@ function renderDash() {
         // Edit role
         detInputRow.querySelectorAll('.dash-item-input')[1].addEventListener('change', function() {
           dashData[sec][i].role = this.value.trim();
+          if (sec === 'sustaining') {
+            dashData[sec][i].boardCallingId = '';
+            detInputRow.querySelector('select').value = '';
+          }
           mainRow.querySelector('.dash-item-org').textContent = this.value.trim() + (dashData[sec][i].org?' · '+dashData[sec][i].org:'');
           saveToStorage();
         });
 
         // Outcome
-        const outcomeSel = detInputRow.querySelector('.dash-item-outcome');
+        const outcomeSel = sec === 'meetwith' ? detInputRow.querySelector('.dash-item-outcome') : null;
         if (outcomeSel) outcomeSel.addEventListener('change', function() {
           dashData[sec][i].outcome = this.value; saveToStorage();
         });
@@ -2601,6 +2936,13 @@ function updateBishopBadge(mainRow, bishopRaw) {
 function toggleDone(sec, idx) {
   if (!Array.isArray(dashData[sec])) return;
   const item = dashData[sec][idx];
+  if (!item) return;
+  if (sec === 'sustaining' && !item.done) {
+    if (!item.name || !cleanRole(item.role)) { showToast('Enter a member and calling first'); return; }
+    const target = sustainingTarget(item);
+    if (!target) { openSustainingAssignment(item); return; }
+    if (!applySustainingToBoard(item, target)) return;
+  }
   item.done = !item.done;
   item.doneDate = item.done ? new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'}) : null;
 
@@ -2644,9 +2986,12 @@ function toggleDone(sec, idx) {
     }
     // Sustaining → prompt to move to Setting Apart
     if (sec === 'sustaining') {
+      renderDash(); saveToStorage();
       setTimeout(() => {
+        const currentIdx = dashData.sustaining.indexOf(item);
+        if (currentIdx < 0) return;
         if (confirm(fmt(item.name) + ' sustained — move to Setting Apart?')) {
-          moveItemToSection(sec, idx, 'setapart');
+          moveItemToSection(sec, currentIdx, 'setapart');
         } else { renderDash(); saveToStorage(); }
       }, 150);
       return;
@@ -2692,9 +3037,21 @@ function addDashItem(sec) {
   const raw = selectedMembers[sec] || document.getElementById('input-' + sec).value.trim();
   const role = document.getElementById('role-' + sec).value.trim();
   if (!raw) { showToast('Type a name first'); return; }
+  if (sec === 'sustaining' && !role) { showToast('Enter a calling or choose one from the org chart'); return; }
   // Ensure the section is always a proper array
   if (!Array.isArray(dashData[sec])) dashData[sec] = [];
-  dashData[sec].push({name:raw, role, org:'', done:false, doneDate:null});
+  const target = sec === 'sustaining' ? findBoardCalling(document.getElementById('target-sustaining').value) : null;
+  if (sec === 'sustaining' && target && normalizedCalling(target.card.r) !== normalizedCalling(role)) {
+    showToast('The chosen org chart calling does not match the entered calling');
+    return;
+  }
+  const org = target ? target.col.col : '';
+  if (dashData[sec].some(item => sameCallingAction(item, raw, role, org, target?.card.callingId))) {
+    showToast('This member and calling are already on the dashboard');
+    return;
+  }
+  dashData[sec].push({name:raw, role, org, boardCallingId:target?.card.callingId || '', done:false, doneDate:null});
+  if (sec === 'sustaining') document.getElementById('target-sustaining').value = '';
   document.getElementById('input-' + sec).value = '';
   document.getElementById('role-' + sec).value = '';
   selectedMembers[sec] = '';
@@ -2764,6 +3121,7 @@ function renderStatsPage() {
   let totalFilled = 0, totalVacant = 0;
   const orgRows = [];
   const withCallings = new Set();
+  const currentMemberNames = new Set(MEMBERS.map(member => normalizedMember(member.raw)));
   (boardData || []).forEach((col, colIdx) => {
     const cards = col.cards || [];
     const filled = cards.filter(c => c.n && c.t !== 'vacant').length;
@@ -2773,7 +3131,11 @@ function renderStatsPage() {
     orgRows.push({name: col.col, filled, vacant, total, colIdx,
       pct: total ? Math.round(filled/total*100) : 0,
       cards: cards});
-    cards.forEach(c => { if (c.n && c.t !== 'vacant') withCallings.add(c.n); });
+    cards.forEach(c => {
+      if (c.n && c.t !== 'vacant' && currentMemberNames.has(normalizedMember(c.n))) {
+        withCallings.add(normalizedMember(c.n));
+      }
+    });
   });
   orgRows.sort((a,b) => b.vacant - a.vacant);
 
@@ -2975,6 +3337,7 @@ function loadSettings() {
 }
 
 function renderAdminPage() {
+  refreshMemberDirectoryUI();
   const settings = loadSettings();
   const wardNameEl = document.getElementById('adminWardName');
   const sessionEl = document.getElementById('adminSessionDays');
@@ -3027,22 +3390,39 @@ function applyRemoteSettings(settings) {
 }
 
 // ── CSV IMPORT ─────────────────────────────────────────────────────
+let importRequestId = 0;
+
 function triggerImport() {
+  if (document.getElementById('importPreview')._importing) {
+    showToast('Please wait for the current import to finish');
+    return;
+  }
   document.getElementById('csvImportInput').click();
 }
 
 function handleCSVImport(event) {
   const file = event.target.files[0];
   if (!file) return;
+  if (document.getElementById('importPreview')._importing) {
+    event.target.value = '';
+    showToast('Please wait for the current import to finish');
+    return;
+  }
+  cancelImport();
+  const requestId = importRequestId;
   const reader = new FileReader();
   reader.onload = e => {
+    if (requestId !== importRequestId) return;
     try {
       const result = parseAndImportCSV(e.target.result);
       showImportPreview(result);
     } catch(err) {
-      showToast('CSV parse error — check the file format');
+      showToast('Import failed: ' + err.message, 8000);
       console.error(err);
     }
+  };
+  reader.onerror = () => {
+    if (requestId === importRequestId) showToast('Could not read this CSV file. Please choose it again.');
   };
   reader.readAsText(file);
   // Reset input so same file can be re-imported
@@ -3050,44 +3430,98 @@ function handleCSVImport(event) {
 }
 
 function parseCSVLine(line) {
-  const result = [];
+  return parseCSVRows(line)[0] || [];
+}
+
+function parseCSVRows(text) {
+  if (typeof text !== 'string') throw new Error('Choose a CSV text file');
+  text = text.replace(/^\uFEFF/, '');
+  const rows = [];
+  let row = [];
   let current = '';
   let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
+  let closedQuote = false;
+  const finishField = () => { row.push(current.trim()); current = ''; closedQuote = false; };
+  const finishRow = () => {
+    finishField();
+    if (row.some(value => value !== '')) rows.push(row);
+    row = [];
+  };
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
     if (ch === '"') {
-      if (inQuotes && line[i+1] === '"') { current += '"'; i++; }
-      else inQuotes = !inQuotes;
+      if (inQuotes && text[i+1] === '"') { current += '"'; i++; }
+      else if (inQuotes) { inQuotes = false; closedQuote = true; }
+      else {
+        if (closedQuote || current.trim()) throw new Error('Unexpected quote in CSV row ' + (rows.length + 1));
+        current = ''; inQuotes = true;
+      }
     } else if (ch === ',' && !inQuotes) {
-      result.push(current.trim()); current = '';
-    } else { current += ch; }
+      finishField();
+    } else if ((ch === '\n' || ch === '\r') && !inQuotes) {
+      finishRow();
+      if (ch === '\r' && text[i+1] === '\n') i++;
+    } else {
+      if (closedQuote && !/\s/.test(ch)) throw new Error('Unexpected text after a quoted CSV field');
+      current += ch;
+    }
   }
-  result.push(current.trim());
-  return result;
+  if (inQuotes) throw new Error('A quoted CSV field is missing its closing quote');
+  finishRow();
+  return rows;
 }
 
 function parseAndImportCSV(text) {
-  const lines = text.split('\n').filter(l => l.trim());
-  if (!lines.length) throw new Error('Empty file');
+  const records = parseCSVRows(text);
+  if (!records.length) throw new Error('The CSV file is empty');
 
-  const headers = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z0-9]/g,''));
-  const nameIdx = headers.findIndex(h => h.includes('name'));
+  const headers = records[0].map(h => h.toLowerCase().replace(/[^a-z0-9]/g,''));
+  const nameIdx = headers.findIndex(h => ['name','fullname','membername','individualname'].includes(h));
+  const firstIdx = headers.findIndex(h => h === 'firstname' || h === 'givenname');
+  const lastIdx = headers.findIndex(h => h === 'lastname' || h === 'surname');
+  const nameOf = row => nameIdx >= 0 ? row[nameIdx] || '' :
+    (row[firstIdx] && row[lastIdx] ? row[lastIdx] + ', ' + row[firstIdx] : '');
   const callingIdx = headers.findIndex(h => h.includes('calling') || h.includes('role'));
   const orgIdx = headers.findIndex(h => h.includes('org') || h.includes('organization') || h.includes('unit'));
   const statusIdx = headers.findIndex(h => h.includes('status'));
 
-  if (nameIdx === -1 || callingIdx === -1) throw new Error('CSV must have Name and Calling columns');
+  if (nameIdx === -1 && (firstIdx === -1 || lastIdx === -1)) {
+    throw new Error('The CSV needs a Name column (or First Name and Last Name columns)');
+  }
 
-  const rows = lines.slice(1).map(l => parseCSVLine(l));
+  const rows = records.slice(1);
+  if (rows.some(row => row.length !== headers.length)) {
+    throw new Error('Some rows do not match the column headings. Names containing commas must be in double quotes.');
+  }
+  if (callingIdx === -1) {
+    const candidates = [];
+    let skippedRows = 0;
+    rows.forEach(row => {
+      const raw = nameOf(row).trim();
+      const summary = /^(?:count|total(?:\s+(?:members?|records?))?)\s*:\s*\d+\s*$/i.test(raw);
+      if (!raw || summary) { skippedRows++; return; }
+      candidates.push({raw});
+    });
+    const members = normalizeMemberRecords(candidates);
+    if (!members.length) throw new Error('No member names were found; the existing list has not been changed');
+    const current = new Set(MEMBERS.map(member => normalizedMember(member.raw)));
+    const incoming = new Set(members.map(member => normalizedMember(member.raw)));
+    return {
+      kind:'members', members, memberCount:members.length, skippedRows,
+      duplicateCount:candidates.length - members.length,
+      addedCount:[...incoming].filter(name => !current.has(name)).length,
+      removedCount:[...current].filter(name => !incoming.has(name)).length
+    };
+  }
   const mode = document.getElementById('importMode')?.value || 'merge';
 
   // Group by org
-  const orgMap = {};
+  const orgMap = Object.create(null);
   rows.forEach(row => {
-    const rawName = row[nameIdx] || '';
+    const rawName = nameOf(row);
     const calling = row[callingIdx] || '';
     const org = orgIdx >= 0 ? (row[orgIdx] || 'General') : 'General';
-    const status = statusIdx >= 0 ? row[statusIdx] : '';
+    const status = statusIdx >= 0 ? row[statusIdx] || '' : '';
     const isVacant = !rawName || rawName === 'Calling Vacant' || status.toLowerCase() === 'vacant';
 
     if (!calling) return;
@@ -3101,34 +3535,97 @@ function parseAndImportCSV(text) {
     });
   });
 
-  return {orgMap, mode, orgCount: Object.keys(orgMap).length, cardCount: rows.length};
+  const cardCount = Object.values(orgMap).reduce((sum, cards) => sum + cards.length, 0);
+  if (!cardCount) throw new Error('No callings were found; the org chart has not been changed');
+  return {kind:'callings', orgMap, mode, orgCount:Object.keys(orgMap).length, cardCount};
 }
 
 function showImportPreview(result) {
   const preview = document.getElementById('importPreview');
   if (!preview) return;
-  const {orgMap, mode, orgCount, cardCount} = result;
-
-  let html = '<div style="background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.75rem">' +
-    '<div style="font-family:DM Mono,monospace;font-size:11px;color:var(--muted);margin-bottom:.5rem">PREVIEW — ' + orgCount + ' orgs, ' + cardCount + ' callings</div>';
-  Object.entries(orgMap).slice(0,5).forEach(([org, cards]) => {
-    html += '<div style="font-size:12px;margin-bottom:3px"><strong>' + org + '</strong> <span style="color:var(--muted)">(' + cards.length + ' callings)</span></div>';
-  });
-  if (orgCount > 5) html += '<div style="font-size:11px;color:var(--muted);font-family:DM Mono,monospace">...and ' + (orgCount-5) + ' more orgs</div>';
-  html += '</div>';
-  html += '<div style="display:flex;gap:8px">' +
-    '<button class="btn accent" onclick="confirmImport()" style="font-size:12px;padding:7px 18px">Confirm Import</button>' +
-    '<button class="btn" onclick="document.getElementById(\'importPreview\').innerHTML=\'\'" style="font-size:12px;padding:7px 14px">Cancel</button>' +
-    '</div>';
-
-  preview.innerHTML = html;
+  preview.replaceChildren();
+  const box = document.createElement('div');
+  box.style.cssText = 'background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:.75rem 1rem;margin-bottom:.75rem;font-size:12px;line-height:1.6';
+  const line = text => {
+    const el = document.createElement('div'); el.textContent = text; box.appendChild(el);
+  };
+  if (result.kind === 'members') {
+    line('MEMBER DIRECTORY PREVIEW — ' + result.memberCount + ' members');
+    line('Replace the member search list (' + MEMBERS.length + ' → ' + result.memberCount + ').');
+    line(result.addedCount + ' added, ' + result.removedCount + ' removed from the member list.');
+    if (result.skippedRows) line(result.skippedRows + ' summary or nameless rows skipped.');
+    if (result.duplicateCount) line(result.duplicateCount + ' duplicate names skipped.');
+    line('Your org chart, dashboard items, and history will NOT change. Only member names are stored.');
+  } else {
+    line('CALLING PREVIEW — ' + result.orgCount + ' orgs, ' + result.cardCount + ' callings');
+    line(result.mode === 'replace' ? 'This replaces the entire org chart, including existing calling details.' : 'Merge: add new callings and keep existing assignments.');
+    Object.entries(result.orgMap).slice(0,5).forEach(([org, cards]) => line(org + ' (' + cards.length + ' callings)'));
+    if (result.orgCount > 5) line('...and ' + (result.orgCount - 5) + ' more orgs');
+    line('The member directory will not change.');
+  }
+  preview.appendChild(box);
+  const actions = document.createElement('div');
+  actions.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+  const confirm = document.createElement('button');
+  confirm.className = 'btn accent';
+  confirm.textContent = result.kind === 'members' ? 'Confirm Member Import' : 'Confirm Calling Import';
+  confirm.onclick = confirmImport;
+  const cancel = document.createElement('button');
+  cancel.className = 'btn'; cancel.textContent = 'Cancel'; cancel.onclick = cancelImport;
+  actions.append(confirm, cancel); preview.appendChild(actions);
   preview._pendingImport = result;
+  showPage('admin');
+  preview.scrollIntoView({block:'nearest'});
+}
+
+function cancelImport() {
+  importRequestId++;
+  const preview = document.getElementById('importPreview');
+  if (preview && !preview._importing) {
+    preview.replaceChildren();
+    preview._pendingImport = null;
+  }
+}
+
+async function confirmMemberImport(result, preview) {
+  if (preview._importing) return;
+  preview._importing = true;
+  memberDirectorySaving = true;
+  const data = {members:result.members, updatedAt:new Date().toISOString()};
+  try {
+    applyMemberDirectory(data, 'saving');
+    preview._pendingImport = null;
+    preview.textContent = result.memberCount + ' members updated on this device — syncing…';
+    await memberRef.set({members:MEMBERS, updatedAt:memberDirectoryUpdatedAt});
+    memberDirectorySyncState = 'synced';
+    const cached = cacheMemberDirectory(false);
+    preview.textContent = '✓ ' + MEMBERS.length + ' members imported and synced. Org chart unchanged.' +
+      (cached ? '' : ' A local backup could not be saved on this device.');
+    showToast(cached ? MEMBERS.length + ' members imported successfully' : 'Members synced, but a local backup could not be saved');
+  } catch(err) {
+    memberDirectorySyncState = 'local';
+    const cached = cacheMemberDirectory(true);
+    preview.textContent = cached ?
+      'Member sync failed. The list is saved on this device only; other devices have not been updated. ' :
+      'Member sync failed and a local backup could not be saved. Keep your CSV and retry before closing this page. ';
+    const retry = document.createElement('button');
+    retry.className = 'btn'; retry.textContent = 'Retry Member Sync';
+    retry.onclick = () => confirmMemberImport(result, preview);
+    preview.appendChild(retry);
+    showToast(cached ? 'Member sync failed — saved on this device only' : 'Member sync failed — no local backup could be saved', 8000);
+    console.warn('Member directory sync failed');
+  } finally {
+    preview._importing = false;
+    memberDirectorySaving = false;
+    refreshMemberDirectoryUI();
+  }
 }
 
 function confirmImport() {
   const preview = document.getElementById('importPreview');
   const result = preview._pendingImport;
-  if (!result) return;
+  if (!result || preview._importing) return;
+  if (result.kind === 'members') return confirmMemberImport(result, preview);
   const {orgMap, mode} = result;
 
   if (mode === 'replace') {
@@ -3152,6 +3649,7 @@ function confirmImport() {
 
   renderBoard();
   saveToStorage();
+  preview._pendingImport = null;
   preview.innerHTML = '<div style="font-size:12px;font-family:DM Mono,monospace;color:#2d7a52;padding:.5rem 0">✓ Import complete — board updated</div>';
   showToast('CSV imported successfully');
 }
